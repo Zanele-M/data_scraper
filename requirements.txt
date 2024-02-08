@@ -1,0 +1,8 @@
+beautifulsoup4==4.12.3
+requests==2.31.0
+djangorestframework==3.14.0
+Django~=5.0.1
+djangorestframework-api-key==2.*
+setuptools~=69.0.3
+python-decouple==3.4
+mysqlclient==2.2.4

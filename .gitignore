@@ -1,0 +1,48 @@
+.idea/
+__pycache__/
+*.py[cod]
+*__pycache__*
+
+# If you're using SQLite
+*.sqlite3
+*.db
+
+# PyCharm project files
+*.iml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/vcs.xml
+.idea/jsLibraryMappings.xml
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+static/
+media/
+
+# Virtualenv
+venv/
+ENV/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
