@@ -10,7 +10,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-yasg^0$m=5x)iihj!9@hq
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', '').strip("[]").split(',')
-ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS]  # This will remove any extra whitespace.
+ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS]
 
 # Application definition
 INSTALLED_APPS = [
@@ -76,14 +76,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.0/howto/static-files/
-
 STATIC_URL = 'static/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -107,7 +100,7 @@ LOGGING = {
         'django': {
             'handlers': ['console'],
             'level': 'DEBUG',
-            'propagate': True,
+            'propagate': False,
         },
     },
 }
