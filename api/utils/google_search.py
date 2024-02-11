@@ -56,7 +56,7 @@ def fetch_google_search(query: str, page_size: int = 1, output_file: str = None)
             except IOError as e:
                 logger.error(f"Error writing to file: {e}")
                 return [{"error": "Error writing to file"}]
-            return links
+        return links
     else:
         logger.error("No link found in the API response.")
         return [{"error": "No links found in the Google API response"}]
