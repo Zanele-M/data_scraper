@@ -10,7 +10,7 @@ class SearchResults(models.Model):
     position = models.IntegerField()
     date_added = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
-    program_Id = models.ForeignKey(Program, on_delete=models.CASCADE)
+    program_id = models.ForeignKey(Program, on_delete=models.CASCADE)
     def __str__(self):
         return self.url
 
