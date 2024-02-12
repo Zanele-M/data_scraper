@@ -8,8 +8,8 @@ import hashlib
 
 from django.utils import timezone
 from datetime import timedelta
-from rest_framework_api_key.permissions import HasAPIKey
-from rest_framework import permissions
+from decouple import config
+
 
 from api.models.program import Program
 from api.models.search_results import SearchResults
@@ -103,9 +103,6 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
 class IconViewSet(viewsets.ModelViewSet):
     serializer_class = SearchResultsSerializer
     queryset = SearchResults.objects.all()
-
-    permission_classes = [HasAPIKey]
-
     @action(detail=False, methods=['post'])
     def download_icon(self, request):
 
@@ -115,6 +112,14 @@ class IconViewSet(viewsets.ModelViewSet):
         program_name = request.data.get("program_name")
         program_id = request.data.get("program_id")
         provided_hash = request.headers.get("X-Hash")
+        api_key = request.headers.get("api-key")
+
+        #Validate api key
+        if not api_key:
+            return JsonResponse({"message": "API key is missing."}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if api_key != config('API_KEY'):
+            return JsonResponse({"message": "Invalid API key."}, status=status.HTTP_401_UNAUTHORIZED)
 
         # Validate program name and program ID lengths
         if not program_name or not program_id:
@@ -122,7 +127,7 @@ class IconViewSet(viewsets.ModelViewSet):
         if len(program_name) > 80:
             return JsonResponse({"message": "Program name is too long."}, status=status.HTTP_400_BAD_REQUEST)
 
-        hash_string = f"{program_name}{program_id}"
+        hash_string = f"{program_name}{program_id}{config('SECRET_KEY')}"
         expected_hash = hashlib.sha256(hash_string.encode()).hexdigest()
 
         if not provided_hash or provided_hash != expected_hash:
