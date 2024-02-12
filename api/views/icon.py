@@ -123,7 +123,7 @@ class IconViewSet(viewsets.ModelViewSet):
             return JsonResponse({"message": "Invalid API key."}, status=status.HTTP_401_UNAUTHORIZED)
 
         # Validate program name and program ID lengths
-        if not program_name or not program_id:
+        if not program_name or not program_id or not provided_hash:
             return JsonResponse({"message": "Invalid input variables. Variables must not be null"}, status=status.HTTP_400_BAD_REQUEST)
         if not 0 < len(program_name) < 80:
             return JsonResponse({"message": "Invalid input variables. 'program_name' length should be between 0 and 80"}, status=status.HTTP_400_BAD_REQUEST)
