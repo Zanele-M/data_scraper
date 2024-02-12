@@ -39,7 +39,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm) -> HttpResponse | R
     meta_search_criteria = {"name": "meta", "attrs": {"property": "og:image"}}
     meta_attribute = "content"
     meta_result = extract_html_element_attribute(url, meta_search_criteria, meta_attribute)
-    if meta_result:
+    if not meta_result[0].get("error"):
         content_type, image_data = download_image(meta_result)
         if content_type and image_data:
             return HttpResponse(image_data, content_type=content_type)
@@ -47,7 +47,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm) -> HttpResponse | R
             return JsonResponse({'message': 'Failed to download icon from downloading site'},
                                 status=status.HTTP_404_NOT_FOUND)
     else:
-        return JsonResponse({'message': 'Icon not found'}, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({'message': 'Icon did not download'}, status=status.HTTP_404_NOT_FOUND)
 
 
 def search_icon(program_name: str, program_id: str) -> HttpResponse:
@@ -129,6 +129,7 @@ class IconViewSet(viewsets.ModelViewSet):
 
         hash_string = f"{program_name}{program_id}{config('SECRET_KEY')}"
         expected_hash = hashlib.sha256(hash_string.encode()).hexdigest()
+
 
         if not provided_hash or provided_hash != expected_hash:
             return JsonResponse({"message": "Hash validation failed."}, status=status.HTTP_400_BAD_REQUEST)

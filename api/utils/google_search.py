@@ -37,7 +37,7 @@ def fetch_google_search(query: str, page_size: int = 3, output_file: str = None)
         "pageSize": page_size
     }
 
-    client = HTTPClient(url, retry_count=3, backoff_factor=1.0)
+    client = HTTPClient(url, retry_count=1, backoff_factor=1.0)
 
     response = client.request("GET", params=params)
 
