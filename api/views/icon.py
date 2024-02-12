@@ -10,7 +10,6 @@ from django.utils import timezone
 from datetime import timedelta
 from decouple import config
 
-
 from api.models.program import Program
 from api.models.search_results import SearchResults
 from api.models.search_term import SearchTerm
@@ -39,16 +38,17 @@ def extract_icon(url: str, search_term_instance: SearchTerm) -> HttpResponse | R
     meta_search_criteria = {"name": "meta", "attrs": {"property": "og:image"}}
     meta_attribute = "content"
     meta_result = extract_html_element_attribute(url, meta_search_criteria, meta_attribute)
-    if not meta_result[0].get("error"):
-        content_type, image_data = download_image(meta_result)
+    if isinstance(meta_result, list) and meta_result and isinstance(meta_result[0], dict) and "error" in meta_result[0]:
+        return JsonResponse({'message': 'Icon did not download'}, status=status.HTTP_404_NOT_FOUND)
+    elif isinstance(meta_result, list) and not meta_result:
+        return JsonResponse({'message': 'No icon downloaded'}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        image_url = meta_result[0] if isinstance(meta_result, list) else meta_result
+        content_type, image_data = download_image(image_url)
         if content_type and image_data:
             return HttpResponse(image_data, content_type=content_type)
         else:
-            return JsonResponse({'message': 'Failed to download icon from downloading site'},
-                                status=status.HTTP_404_NOT_FOUND)
-    else:
-        return JsonResponse({'message': 'Icon did not download'}, status=status.HTTP_404_NOT_FOUND)
-
+            return JsonResponse({'message': 'Failed to download icon from the URL'}, status=status.HTTP_404_NOT_FOUND)
 
 def search_icon(program_name: str, program_id: str) -> HttpResponse:
     """
@@ -103,6 +103,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
 class IconViewSet(viewsets.ModelViewSet):
     serializer_class = SearchResultsSerializer
     queryset = SearchResults.objects.all()
+
     @action(detail=False, methods=['post'])
     def download_icon(self, request):
 
@@ -114,7 +115,7 @@ class IconViewSet(viewsets.ModelViewSet):
         provided_hash = request.headers.get("X-Hash")
         api_key = request.headers.get("api-key")
 
-        #Validate api key
+        # Validate api key
         if not api_key:
             return JsonResponse({"message": "API key is missing."}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -129,7 +130,6 @@ class IconViewSet(viewsets.ModelViewSet):
 
         hash_string = f"{program_name}{program_id}{config('SECRET_KEY')}"
         expected_hash = hashlib.sha256(hash_string.encode()).hexdigest()
-
 
         if not provided_hash or provided_hash != expected_hash:
             return JsonResponse({"message": "Hash validation failed."}, status=status.HTTP_400_BAD_REQUEST)

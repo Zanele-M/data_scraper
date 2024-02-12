@@ -7,8 +7,7 @@ from api.client.http_client import HTTPClient
 logger = logging.getLogger(__name__)
 
 
-def extract_html_element_attribute(url: str, search_criteria: dict, attribute: str) -> dict[str, str] | str | list[
-    Any] | Any:
+def extract_html_element_attribute(url: str, search_criteria: dict, attribute: str) -> Union[str, List[str], List[dict]]:
     """
     Fetches the HTML content from a URL using the HTTPClient and extracts the value(s) of a specified attribute
     from elements matching given search criteria. Returns human-readable error messages upon failure.
@@ -19,7 +18,8 @@ def extract_html_element_attribute(url: str, search_criteria: dict, attribute: s
         attribute (str): The attribute from which to extract the value.
 
     Returns:
-        Union[str, List[str], str]: The value(s) of the specified attribute on success, or a descriptive error message.
+        Union[str, List[str], List[dict]]: The value(s) of the specified attribute on success,
+        or a list of descriptive error messages.
     """
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
@@ -30,21 +30,21 @@ def extract_html_element_attribute(url: str, search_criteria: dict, attribute: s
 
     response = client.request("GET", headers=headers)
     if isinstance(response, dict) and "error" in response:
-        return [{"error": "Error writing to file"}]
+        return [{"error": "Error fetching the page"}]  # Adjusted error message for clarity
 
     soup = BeautifulSoup(response.content, 'html.parser')
     elements = soup.find_all(**search_criteria) if search_criteria else []
 
     if not elements:
-        return "No matching elements found for the provided search criteria."
+        return [{"error": "No matching elements found for the provided search criteria."}]
 
     values = [element.get(attribute) for element in elements if element.has_attr(attribute)]
 
     if not values:
-        return f"No elements found with the specified attribute '{attribute}'."
+        return [{"error": f"No elements found with the specified attribute '{attribute}'."}]
 
-    return values[0] if len(values) == 1 else values
-
+    # Adjusted to ensure the return type is consistent
+    return values if len(values) > 1 else values[0]
 
 def download_image(url: str):
     """
