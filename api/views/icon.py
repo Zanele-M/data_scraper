@@ -110,7 +110,7 @@ class IconViewSet(viewsets.ModelViewSet):
         """
         Custom action to fetch or search for an icon based on `program_name` and `program_id` from POST data.
         """
-        program_name = request.data.get("program_name").strip()
+        program_name = request.data.get("program_name")
         program_id = request.data.get("program_id")
         provided_hash = request.headers.get("X-Hash")
         api_key = request.headers.get("api-key").strip()
@@ -125,7 +125,7 @@ class IconViewSet(viewsets.ModelViewSet):
         # Validate program name and program ID lengths
         if not program_name or not program_id or not provided_hash:
             return JsonResponse({"message": "Invalid input variables. Variables must not be null"}, status=status.HTTP_400_BAD_REQUEST)
-        if not 0 < len(program_name) < 80:
+        if not 0 < len(program_name.strip()) < 80:
             return JsonResponse({"message": "Invalid input variables. 'program_name' length should be between 0 and 80"}, status=status.HTTP_400_BAD_REQUEST)
 
         program_id_str = str(program_id)
