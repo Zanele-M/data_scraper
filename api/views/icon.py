@@ -113,44 +113,54 @@ class IconViewSet(viewsets.ModelViewSet):
         program_name = request.data.get("program_name")
         program_id = request.data.get("program_id")
         provided_hash = request.headers.get("X-Hash")
-        api_key = request.headers.get("api-key")
+        api_key = request.headers.get("api-key").strip()
 
         # Validate api key
         if not api_key:
             return JsonResponse({"message": "API key is missing."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        if api_key != config('API_KEY'):
+        if api_key != config('API_KEY') or len(api_key) != 41:
             return JsonResponse({"message": "Invalid API key."}, status=status.HTTP_401_UNAUTHORIZED)
 
         # Validate program name and program ID lengths
         if not program_name or not program_id:
-            return JsonResponse({"message": "Missing program name or program Id."}, status=status.HTTP_400_BAD_REQUEST)
-        if len(program_name) > 80:
-            return JsonResponse({"message": "Program name is too long."}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({"message": "Invalid input variables. Variables must not be null"}, status=status.HTTP_400_BAD_REQUEST)
+        if not 0 < len(program_name) < 80:
+            return JsonResponse({"message": "Invalid input variables. 'program_name' length should be between 0 and 80"}, status=status.HTTP_400_BAD_REQUEST)
 
-        hash_string = f"{program_name}{program_id}{config('SECRET_KEY')}"
+        program_id_str = str(program_id)
+        try:
+            float(program_id_str)
+            is_numeric = True
+        except ValueError:
+            is_numeric = False
+
+        if not is_numeric:
+            return JsonResponse({"message": "Invalid input variables. 'program_id' must be numeric."},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        salt = config('SECRET_KEY')
+
+        hash_string = f"{program_name}{program_id}{salt}"
         expected_hash = hashlib.sha256(hash_string.encode()).hexdigest()
 
-        if not provided_hash or provided_hash != expected_hash:
+        if not provided_hash or provided_hash != expected_hash or len(provided_hash) != 64:
             return JsonResponse({"message": "Hash validation failed."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Calculate the date one month ago
         one_month_ago = timezone.now() - timedelta(days=30)
 
-        # Filter the queryset directly within this action
-        queryset = self.queryset.filter(
-            program_id__program_id=program_id,
-            program_id__program_name=program_name,
-            last_updated__gte=one_month_ago
-        ).first()
         try:
+            queryset = self.queryset.filter(
+                program_id__program_id=program_id,
+                program_id__program_name=program_name.strip(),
+                last_updated__gte=one_month_ago
+            ).first()
             if queryset and queryset.url:
-                # Use the existing search result if it's found
                 search_term_instance = queryset.search_term
                 if queryset:
                     return extract_icon(queryset.url, search_term_instance)
 
-            # Perform a new search and extraction if no existing result is found
             return search_icon(program_name, program_id)
 
         except Exception as e:
