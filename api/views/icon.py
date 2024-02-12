@@ -9,6 +9,7 @@ import hashlib
 from django.utils import timezone
 from datetime import timedelta
 from rest_framework_api_key.permissions import HasAPIKey
+from rest_framework import permissions
 
 from api.models.program import Program
 from api.models.search_results import SearchResults
@@ -102,10 +103,12 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
 class IconViewSet(viewsets.ModelViewSet):
     serializer_class = SearchResultsSerializer
     queryset = SearchResults.objects.all()
-    PROGRAM_NAME_MAX_LENGTH = 80
 
-    @action(detail=False, methods=['post'], permission_classes=[HasAPIKey])
+    permission_classes = [HasAPIKey]
+
+    @action(detail=False, methods=['post'])
     def download_icon(self, request):
+
         """
         Custom action to fetch or search for an icon based on `program_name` and `program_id` from POST data.
         """
