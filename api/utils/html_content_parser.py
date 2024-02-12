@@ -1,14 +1,14 @@
 import logging
 from bs4 import BeautifulSoup
-from typing import Union, List
+from typing import Union, List, Dict, Any
 
 from api.client.http_client import HTTPClient
 
 logger = logging.getLogger(__name__)
 
 
-def extract_html_element_attribute(url: str, search_criteria: dict, attribute: str) -> Union[
-    str, List[str], str]:
+def extract_html_element_attribute(url: str, search_criteria: dict, attribute: str) -> dict[str, str] | str | list[
+    Any] | Any:
     """
     Fetches the HTML content from a URL using the HTTPClient and extracts the value(s) of a specified attribute
     from elements matching given search criteria. Returns human-readable error messages upon failure.
@@ -26,15 +26,11 @@ def extract_html_element_attribute(url: str, search_criteria: dict, attribute: s
     }
 
     # Create an instance of HTTPClient internally
-    client = HTTPClient(url, retry_count=3, backoff_factor=1.0)
+    client = HTTPClient(url, retry_count=3, backoff_factor=1.5)
 
     response = client.request("GET", headers=headers)
-    # Check if the response is an error message
     if isinstance(response, dict) and "error" in response:
-        return "Failed to fetch the site: " + response["error"]
-
-    if response.status_code != 200:
-        return f"Failed to access the URL. Status code: {response.status_code}"
+        return [{"error": "Error writing to file"}]
 
     soup = BeautifulSoup(response.content, 'html.parser')
     elements = soup.find_all(**search_criteria) if search_criteria else []
