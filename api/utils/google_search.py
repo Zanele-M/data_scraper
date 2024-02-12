@@ -8,7 +8,7 @@ from api.client.http_client import HTTPClient
 logger = logging.getLogger(__name__)
 
 
-def fetch_google_search(query: str, page_size: int = 1, output_file: str = None) -> list[dict[str, Any]]:
+def fetch_google_search(query: str, page_size: int = 3, output_file: str = None) -> list[dict[str, Any]]:
     """
     Fetches links from Google search results for a given query using the SpaceSERP API.
 

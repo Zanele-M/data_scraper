@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Program(models.Model):
-    program_id = models.IntegerField(unique=True)
+    program_id = models.IntegerField()
     program_name = models.CharField(max_length=80, unique=True)
 
     def __str__(self):
