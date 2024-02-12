@@ -110,7 +110,7 @@ class IconViewSet(viewsets.ModelViewSet):
         """
         Custom action to fetch or search for an icon based on `program_name` and `program_id` from POST data.
         """
-        program_name = request.data.get("program_name")
+        program_name = request.data.get("program_name").strip()
         program_id = request.data.get("program_id")
         provided_hash = request.headers.get("X-Hash")
         api_key = request.headers.get("api-key").strip()
@@ -146,6 +146,8 @@ class IconViewSet(viewsets.ModelViewSet):
 
         if not provided_hash or provided_hash != expected_hash or len(provided_hash) != 64:
             return JsonResponse({"message": "Hash validation failed."}, status=status.HTTP_400_BAD_REQUEST)
+
+        print(expected_hash)
 
         # Calculate the date one month ago
         one_month_ago = timezone.now() - timedelta(days=30)
