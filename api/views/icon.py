@@ -22,13 +22,13 @@ logger = logging.getLogger(__name__)
 MAX_ATTEMPTS = 5
 
 
-def extract_icon(url: str, search_term_instance: SearchTerm) -> HttpResponse | Response:
+def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) -> HttpResponse | Response:
     """
     Extract the required meta attribute from the URL and respond with the image.
     """
 
     if search_term_instance.attempts >= MAX_ATTEMPTS:
-        return JsonResponse({'message': 'Maximum number of attempts reached for the given program name'},
+        return JsonResponse({'message': f"Maximum number of attempts reached for the given search term: {program_name}"},
                             status=status.HTTP_200_OK)
 
     # Update attempt count for the search term
@@ -70,7 +70,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
 
         search_term_instance, _ = SearchTerm.objects.get_or_create(term=f"{program_name} site:{site} inurl:{inurl}")
         if search_term_instance.attempts > MAX_ATTEMPTS:
-            return JsonResponse({'error': 'Maximum number of attempts reached for this search term'},
+            return JsonResponse({'error': f"Maximum number of attempts reached for {program_name}"},
                                 status=status.HTTP_200_OK)
 
         search_term_instance.attempts += 1
@@ -92,7 +92,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
             )
 
             if re.match(pattern, item['link']):
-                extraction_response = extract_icon(item['link'], search_term_instance)
+                extraction_response = extract_icon(item['link'], search_term_instance, program_name)
                 if extraction_response.status_code in [status.HTTP_200_OK]:
                     return extraction_response  # Successfully found and extracted, or not found but processed
                 else:
