@@ -1,4 +1,5 @@
 import logging
+import requests
 from bs4 import BeautifulSoup
 from typing import Union, List, Dict, Any
 
@@ -7,7 +8,8 @@ from api.client.http_client import HTTPClient
 logger = logging.getLogger(__name__)
 
 
-def extract_html_element_attribute(url: str, search_criteria: dict, attribute: str) -> Union[str, List[str], List[dict]]:
+def extract_html_element_attribute(url: str, search_criteria: dict, attribute: str) -> Union[
+    str, List[str], List[dict]]:
     """
     Fetches the HTML content from a URL using the HTTPClient and extracts the value(s) of a specified attribute
     from elements matching given search criteria. Returns human-readable error messages upon failure.
@@ -46,6 +48,7 @@ def extract_html_element_attribute(url: str, search_criteria: dict, attribute: s
     # Adjusted to ensure the return type is consistent
     return values if len(values) > 1 else values[0]
 
+
 def download_image(url: str):
     """
     Download an image from the URL using the HTTPClient with up to 3 retries and exponential backoff.
@@ -56,16 +59,20 @@ def download_image(url: str):
     Returns:
         A tuple of (content_type, image_data) if successful, or (None, None) on failure.
     """
-    # Create an instance of HTTPClient specifically for this download task
-    # Adjust the instantiation as needed, especially if your HTTPClient class requires specific arguments
+
     client = HTTPClient(url, retry_count=3, backoff_factor=1.0)
 
-    # Use the client to make a GET request and specify that we want the raw response
-    response = client.request("GET")
-
-    if response and response.status_code == 200:
-        content_type = response.headers.get('Content-Type')
-        return content_type, response.content
-    else:
-        logger.error(f"Failed to download image from {url}.")
+    try:
+        response = client.request("GET")
+        if response.status_code == 200:
+            content_type = response.headers.get('Content-Type')
+            return content_type, response.content
+        else:
+            logger.error(f"Failed to download image from {url}.")
+            return None, None
+    except AttributeError:
+        logger.error(f"Response object does not have the expected attributes.")
+        return None, None
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
         return None, None
