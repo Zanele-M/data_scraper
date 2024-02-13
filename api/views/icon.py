@@ -29,7 +29,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm) -> HttpResponse | R
 
     if search_term_instance.attempts >= MAX_ATTEMPTS:
         return JsonResponse({'message': 'Maximum number of attempts reached for the given program name'},
-                            status=status.HTTP_400_BAD_REQUEST)
+                            status=status.HTTP_200_OK)
 
     # Update attempt count for the search term
     search_term_instance.attempts += 1
@@ -39,9 +39,9 @@ def extract_icon(url: str, search_term_instance: SearchTerm) -> HttpResponse | R
     meta_attribute = "content"
     meta_result = extract_html_element_attribute(url, meta_search_criteria, meta_attribute)
     if isinstance(meta_result, list) and meta_result and isinstance(meta_result[0], dict) and "error" in meta_result[0]:
-        return JsonResponse({'message': 'Icon did not download'}, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({'message': 'Icon did not download'}, status=status.HTTP_200_OK)
     elif isinstance(meta_result, list) and not meta_result:
-        return JsonResponse({'message': 'No icon downloaded'}, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({'message': 'No icon downloaded'}, status=status.HTTP_200_OK)
     else:
         image_url = meta_result[0] if isinstance(meta_result, list) else meta_result
         content_type, image_data = download_image(image_url)
@@ -49,7 +49,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm) -> HttpResponse | R
             return HttpResponse(image_data, content_type=content_type)
         else:
             return JsonResponse({'message': f"Failed to download icon from the URL: {url}"},
-                                status=status.HTTP_404_NOT_FOUND)
+                                status=status.HTTP_200_OK)
 
 
 def search_icon(program_name: str, program_id: str) -> HttpResponse:
@@ -71,7 +71,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
         search_term_instance, _ = SearchTerm.objects.get_or_create(term=f"{program_name} site:{site} inurl:{inurl}")
         if search_term_instance.attempts >= MAX_ATTEMPTS:
             return JsonResponse({'message': 'Maximum number of attempts reached for this search term'},
-                                status=status.HTTP_400_BAD_REQUEST)
+                                status=status.HTTP_200_OK)
 
         search_term_instance.attempts += 1
         search_term_instance.save()
@@ -93,13 +93,13 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
 
             if re.match(pattern, item['link']):
                 extraction_response = extract_icon(item['link'], search_term_instance)
-                if extraction_response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]:
+                if extraction_response.status_code in [status.HTTP_200_OK]:
                     return extraction_response  # Successfully found and extracted, or not found but processed
                 else:
                     # If the extraction failed, log and attempt the next site
                     logger.error("Error during extraction, attempting next site if available.")
 
-    return JsonResponse({'message': 'No links found across all sites'}, status=status.HTTP_404_NOT_FOUND)
+    return JsonResponse({'message': 'No links found across all sites'}, status=status.HTTP_200_OK)
 
 
 class IconViewSet(viewsets.ModelViewSet):
