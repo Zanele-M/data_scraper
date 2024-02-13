@@ -19,7 +19,7 @@ from api.utils.html_content_parser import extract_html_element_attribute, downlo
 
 logger = logging.getLogger(__name__)
 
-MAX_ATTEMPTS = 1
+MAX_ATTEMPTS = 5
 
 
 def extract_icon(url: str, search_term_instance: SearchTerm) -> HttpResponse | Response:
@@ -39,9 +39,9 @@ def extract_icon(url: str, search_term_instance: SearchTerm) -> HttpResponse | R
     meta_attribute = "content"
     meta_result = extract_html_element_attribute(url, meta_search_criteria, meta_attribute)
     if isinstance(meta_result, list) and meta_result and isinstance(meta_result[0], dict) and "error" in meta_result[0]:
-        return JsonResponse({'message': 'Icon did not download'}, status=status.HTTP_200_OK)
+        return JsonResponse({'error': f'Could not parse from the url: {url}'}, status=status.HTTP_200_OK)
     elif isinstance(meta_result, list) and not meta_result:
-        return JsonResponse({'message': 'No icon downloaded'}, status=status.HTTP_200_OK)
+        return JsonResponse({'error': f'Could not parse from the url: {url}'}, status=status.HTTP_200_OK)
     else:
         image_url = meta_result[0] if isinstance(meta_result, list) else meta_result
         content_type, image_data = download_image(image_url)
@@ -69,8 +69,8 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
         pattern = site_info.get('url_pattern')
 
         search_term_instance, _ = SearchTerm.objects.get_or_create(term=f"{program_name} site:{site} inurl:{inurl}")
-        if search_term_instance.attempts >= MAX_ATTEMPTS:
-            return JsonResponse({'message': 'Maximum number of attempts reached for this search term'},
+        if search_term_instance.attempts > MAX_ATTEMPTS:
+            return JsonResponse({'error': 'Maximum number of attempts reached for this search term'},
                                 status=status.HTTP_200_OK)
 
         search_term_instance.attempts += 1
@@ -99,7 +99,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
                     # If the extraction failed, log and attempt the next site
                     logger.error("Error during extraction, attempting next site if available.")
 
-    return JsonResponse({'message': 'No links found across all sites'}, status=status.HTTP_200_OK)
+    return JsonResponse({'error': 'No links found across all sites'}, status=status.HTTP_200_OK)
 
 
 class IconViewSet(viewsets.ModelViewSet):
@@ -119,18 +119,18 @@ class IconViewSet(viewsets.ModelViewSet):
 
         # Validate api key
         if not api_key:
-            return JsonResponse({"message": "API key is missing."}, status=status.HTTP_401_UNAUTHORIZED)
+            return JsonResponse({"error": "API key is missing."}, status=status.HTTP_401_UNAUTHORIZED)
 
         if api_key != config('API_KEY') or len(api_key) != 41:
-            return JsonResponse({"message": "Invalid API key."}, status=status.HTTP_401_UNAUTHORIZED)
+            return JsonResponse({"error": "Invalid API key."}, status=status.HTTP_401_UNAUTHORIZED)
 
         # Validate program name and program ID lengths
         if not program_name or not program_id or not provided_hash:
-            return JsonResponse({"message": "Invalid input variables. Variables must not be null"},
+            return JsonResponse({"error": "Invalid input variables. Variables must not be null"},
                                 status=status.HTTP_400_BAD_REQUEST)
         if not 0 < len(program_name.strip()) < 80:
             return JsonResponse(
-                {"message": "Invalid input variables. 'program_name' length should be between 0 and 80"},
+                {"error": "Invalid input variables. 'program_name' length should be between 0 and 80"},
                 status=status.HTTP_400_BAD_REQUEST)
 
         program_id_str = str(program_id)
@@ -141,16 +141,17 @@ class IconViewSet(viewsets.ModelViewSet):
             is_numeric = False
 
         if not is_numeric:
-            return JsonResponse({"message": "Invalid input variables. 'program_id' must be numeric."},
+            return JsonResponse({"error": "Invalid input variables. 'program_id' must be numeric."},
                                 status=status.HTTP_400_BAD_REQUEST)
 
         salt = config('SECRET_KEY')
 
         hash_string = f"{program_name.strip()}{program_id}{salt.strip()}"
         expected_hash = hashlib.sha256(hash_string.encode()).hexdigest()
+        print(expected_hash)
 
         if not provided_hash or provided_hash.strip() != expected_hash or len(provided_hash.strip()) != 64:
-            return JsonResponse({"message": "Hash validation failed."}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({"error": "Hash validation failed."}, status=status.HTTP_400_BAD_REQUEST)
         # Calculate the date one month ago
         one_month_ago = timezone.now() - timedelta(days=30)
 
@@ -169,5 +170,5 @@ class IconViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             print(e)
-            return JsonResponse({'message': 'An unexpected error occurred.'},
+            return JsonResponse({'error': 'An unexpected error occurred.'},
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
