@@ -19,7 +19,7 @@ from api.utils.html_content_parser import extract_html_element_attribute, downlo
 
 logger = logging.getLogger(__name__)
 
-MAX_ATTEMPTS = 2
+MAX_ATTEMPTS = 1
 
 
 def extract_icon(url: str, search_term_instance: SearchTerm) -> HttpResponse | Response:
@@ -70,7 +70,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
 
         search_term_instance, _ = SearchTerm.objects.get_or_create(term=f"{program_name} site:{site} inurl:{inurl}")
         if search_term_instance.attempts >= MAX_ATTEMPTS:
-            return HttpResponse({'message': 'Maximum number of attempts reached for this search term'},
+            return JsonResponse({'message': 'Maximum number of attempts reached for this search term'},
                                 status=status.HTTP_400_BAD_REQUEST)
 
         search_term_instance.attempts += 1
