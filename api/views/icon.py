@@ -19,7 +19,7 @@ from api.utils.html_content_parser import extract_html_element_attribute, downlo
 
 logger = logging.getLogger(__name__)
 
-MAX_ATTEMPTS = 5
+MAX_ATTEMPTS = 50
 
 
 def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) -> HttpResponse | Response:
@@ -28,7 +28,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
     """
 
     if search_term_instance.attempts >= MAX_ATTEMPTS:
-        return JsonResponse({'message': f"Maximum number of attempts reached for the given search term: {program_name}"},
+        return JsonResponse({'message': f"Maximum number of download attempts reached for {program_name}."},
                             status=status.HTTP_200_OK)
 
     # Update attempt count for the search term
@@ -70,7 +70,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
 
         search_term_instance, _ = SearchTerm.objects.get_or_create(term=f"{program_name} site:{site} inurl:{inurl}")
         if search_term_instance.attempts > MAX_ATTEMPTS:
-            return JsonResponse({'error': f"Maximum number of attempts reached for {program_name}"},
+            return JsonResponse({'error': f"Maximum number of google search attempts reached for {program_name}"},
                                 status=status.HTTP_200_OK)
 
         search_term_instance.attempts += 1
