@@ -21,7 +21,7 @@ from api.utils.html_content_parser import extract_html_element_attribute, downlo
 
 logger = logging.getLogger(__name__)
 
-MAX_ATTEMPTS = 50
+MAX_ATTEMPTS = 10
 
 #todo test for same id
 def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) -> HttpResponse | Response:
