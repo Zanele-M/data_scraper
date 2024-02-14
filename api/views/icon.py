@@ -53,7 +53,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
             image_data_uri = f'data:{content_type};base64,{base64_string}'
             return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
         else:
-            return JsonResponse({'message': f"Failed to download icon from the URL: {url}"},
+            return JsonResponse({'error': f"Failed to download icon from the URL: {url}"},
                                 status=status.HTTP_200_OK)
 
 
