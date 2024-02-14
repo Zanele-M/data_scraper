@@ -1,3 +1,5 @@
+import base64
+
 from django.http import HttpResponse, JsonResponse
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -21,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 MAX_ATTEMPTS = 50
 
-
+#todo test for same id
 def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) -> HttpResponse | Response:
     """
     Extract the required meta attribute from the URL and respond with the image.
@@ -46,7 +48,10 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
         image_url = meta_result[0] if isinstance(meta_result, list) else meta_result
         content_type, image_data = download_image(image_url)
         if content_type and image_data:
-            return HttpResponse(image_data, content_type=content_type)
+            base64_encoded_data = base64.b64encode(image_data)
+            base64_string = base64_encoded_data.decode('utf-8')
+            image_data_uri = f'data:{content_type};base64,{base64_string}'
+            return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
         else:
             return JsonResponse({'message': f"Failed to download icon from the URL: {url}"},
                                 status=status.HTTP_200_OK)
