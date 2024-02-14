@@ -30,7 +30,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
     """
 
     if search_term_instance.attempts >= MAX_ATTEMPTS:
-        return JsonResponse({'message': f"Maximum number of download attempts reached for {program_name}."},
+        return JsonResponse({'error': f"Maximum number of download attempts reached for {program_name}."},
                             status=status.HTTP_200_OK)
 
     # Update attempt count for the search term
