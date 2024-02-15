@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 
 MAX_ATTEMPTS = 10
 
-#todo test for same id
 def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) -> HttpResponse | Response:
     """
     Extract the required meta attribute from the URL and respond with the image.
@@ -43,7 +42,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
     if isinstance(meta_result, list) and meta_result and isinstance(meta_result[0], dict) and "error" in meta_result[0]:
         return JsonResponse({'error': f'Could not parse from the url: {url}'}, status=status.HTTP_200_OK)
     elif isinstance(meta_result, list) and not meta_result:
-        return JsonResponse({'error': f'Could not parse from the url: {url}'}, status=status.HTTP_200_OK)
+        return JsonResponse({'error': f'Could not parse from the url: {url} for program {program_name}'}, status=status.HTTP_200_OK)
     else:
         image_url = meta_result[0] if isinstance(meta_result, list) else meta_result
         content_type, image_data = download_image(image_url)
@@ -53,7 +52,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
             image_data_uri = f'data:{content_type};base64,{base64_string}'
             return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
         else:
-            return JsonResponse({'error': f"Failed to download icon from the URL: {url}"},
+            return JsonResponse({'error': f"Failed to download icon for {program_name} from the URL: {url}"},
                                 status=status.HTTP_200_OK)
 
 
