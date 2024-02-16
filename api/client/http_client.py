@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class HTTPClient:
-    def __init__(self, url: str, api_key: Optional[str] = None, retry_count: int = 2, backoff_factor: float = 2.0):
+    def __init__(self, url: str, api_key: Optional[str] = None, retry_count: int = 2, backoff_factor: float = 1.0):
         """
         Initializes the HTTP client with a base URL, optional API key for authentication, retry count, and backoff factor for retries.
 
@@ -46,7 +46,8 @@ class HTTPClient:
                     logger.error(f"Expected status code 200")
             except Exception as e:
                 logger.error("Error occurred while fetching or processing the response", exc_info=e)
-            time.sleep(self.backoff_factor * (2 ** attempts))
+            time.sleep(self.backoff_factor * (60 ** attempts))
+            print(self.backoff_factor * (60 ** attempts))
             attempts += 1
 
         return {"error": "Failed to fetch the response after retries"}
