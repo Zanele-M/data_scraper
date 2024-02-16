@@ -103,7 +103,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
                     # If the extraction failed, log and attempt the next site
                     logger.error("Error during extraction, attempting next site if available.")
 
-    return JsonResponse({'error': 'No links found across all sites'}, status=status.HTTP_200_OK)
+    return JsonResponse({'error': f"No links found across all sites for {program_name}"}, status=status.HTTP_200_OK)
 
 
 class IconViewSet(viewsets.ModelViewSet):
