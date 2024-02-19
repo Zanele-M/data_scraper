@@ -23,7 +23,7 @@ from api.models.search_term import SearchTerm
 from api.serializer.search_result import SearchResultsSerializer
 from api.utils.google_search import fetch_google_search
 from api.utils.html_content_parser import extract_html_element_attribute, download_image
-from api.utils.rm_background import remove_bg, has_transparent_background
+from api.utils.rm_background import has_transparent_background, remove_bg
 
 logger = logging.getLogger(__name__)
 
