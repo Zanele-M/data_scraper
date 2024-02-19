@@ -201,6 +201,7 @@ class IconViewSet(viewsets.ModelViewSet):
             if queryset and queryset.url:
                 search_term_instance = queryset.search_term
                 if queryset:
+                    print("this is the item link", queryset.url)
                     return extract_icon(queryset.url, search_term_instance, program_name)
 
             return search_icon(program_name, program_id)
