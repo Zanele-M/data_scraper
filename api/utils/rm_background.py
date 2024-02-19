@@ -5,7 +5,9 @@ from io import BytesIO
 
 def has_transparent_background(icon):
     if icon.mode in ('RGBA', 'LA') or (icon.mode == 'P' and 'transparency' in icon.info):
+        print("I get here")
         transparent = any(pixel[3] < 255 for row in icon.getdata() for pixel in row)
+        print("I get here")
         return transparent
     return False
 
