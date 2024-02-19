@@ -22,7 +22,7 @@ from api.utils.html_content_parser import extract_html_element_attribute, downlo
 
 logger = logging.getLogger(__name__)
 
-MAX_ATTEMPTS = 10
+MAX_ATTEMPTS = 100
 
 def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) -> HttpResponse | Response:
     """
@@ -120,8 +120,6 @@ class IconViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def download_icon(self, request):
-        start_time = time.time()
-
         """
         Custom action to fetch or search for an icon based on `program_name` and `program_id` from POST data.
         """
