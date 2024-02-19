@@ -65,7 +65,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
             # Open the temporary file with PIL to check for transparency
             icon = Image.open(temp_file_path)
             # Example segment for processing and returning the image
-            if True:
+            if has_transparent_background(icon):
                 # Image is transparent, encode and return as is
                 base64_encoded_data = base64.b64encode(image_data)
             else:
