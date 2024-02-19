@@ -104,7 +104,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
 
         search_term_instance, _ = SearchTerm.objects.get_or_create(term=f"{program_name} site:{site} inurl:{inurl}")
         if search_term_instance.attempts > MAX_ATTEMPTS:
-            execution_time = time.time() - start_time  # End timing
+            execution_time = time.time() - start_time
             print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
             return JsonResponse({'error': f"Maximum number of google search attempts reached for {program_name}"},
                                 status=status.HTTP_200_OK)
@@ -120,6 +120,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
             continue
 
         for item in google_response:
+            print("this is the item link", item['link'])
             SearchResults.objects.create(
                 search_term=search_term_instance,
                 program_id=program_instance,
