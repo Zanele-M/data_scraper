@@ -42,7 +42,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
     meta_attribute = "content"
     meta_result = extract_html_element_attribute(url, meta_search_criteria, meta_attribute)
     execution_time = time.time() - start_time
-    logger.info(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
+    print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
     if isinstance(meta_result, list) and meta_result and isinstance(meta_result[0], dict) and "error" in meta_result[0]:
         return JsonResponse({'error': f'Could not parse from the url: {url}'}, status=status.HTTP_200_OK)
     elif isinstance(meta_result, list) and not meta_result:
@@ -80,7 +80,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
         search_term_instance, _ = SearchTerm.objects.get_or_create(term=f"{program_name} site:{site} inurl:{inurl}")
         if search_term_instance.attempts > MAX_ATTEMPTS:
             execution_time = time.time() - start_time  # End timing
-            logger.info(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
+            print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
             return JsonResponse({'error': f"Maximum number of google search attempts reached for {program_name}"},
                                 status=status.HTTP_200_OK)
 
@@ -110,7 +110,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
                     logger.error("Error during extraction, attempting next site if available.")
 
     execution_time = time.time() - start_time
-    logger.info(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
+    print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
     return JsonResponse({'error': f"No links found across all sites for {program_name}"}, status=status.HTTP_200_OK)
 
 
@@ -161,7 +161,6 @@ class IconViewSet(viewsets.ModelViewSet):
 
         hash_string = f"{program_name.strip()}{program_id}{salt.strip()}"
         expected_hash = hashlib.sha256(hash_string.encode()).hexdigest()
-        print(expected_hash)
 
         if not provided_hash or provided_hash.strip() != expected_hash or len(provided_hash.strip()) != 64:
             return JsonResponse({"error": "Hash validation failed."}, status=status.HTTP_400_BAD_REQUEST)
