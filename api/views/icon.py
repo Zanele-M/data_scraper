@@ -1,6 +1,10 @@
 import base64
+import os
+import tempfile
 import time
+from io import BytesIO
 
+from PIL import Image
 from django.http import HttpResponse, JsonResponse
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -19,6 +23,7 @@ from api.models.search_term import SearchTerm
 from api.serializer.search_result import SearchResultsSerializer
 from api.utils.google_search import fetch_google_search
 from api.utils.html_content_parser import extract_html_element_attribute, download_image
+from api.utils.rm_background import remove_bg, has_transparent_background
 
 logger = logging.getLogger(__name__)
 
@@ -51,13 +56,37 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
         image_url = meta_result[0] if isinstance(meta_result, list) else meta_result
         content_type, image_data = download_image(image_url)
         if content_type and image_data:
-            base64_encoded_data = base64.b64encode(image_data)
-            base64_string = base64_encoded_data.decode('utf-8')
-            image_data_uri = f'data:{content_type};base64,{base64_string}'
-            return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
+            # Save the downloaded image to a temporary file
+            temp_file = tempfile.NamedTemporaryFile(delete=False)
+            temp_file_path = temp_file.name
+            with open(temp_file_path, 'wb') as file:
+                file.write(image_data)
+
+            # Open the temporary file with PIL to check for transparency
+            icon = Image.open(temp_file_path)
+            if has_transparent_background(icon):
+                base64_encoded_data = base64.b64encode(image_data)
+                base64_string = base64_encoded_data.decode('utf-8')
+                image_data_uri = f'data:{content_type};base64,{base64_string}'
+                return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
+            else:
+                # Process the image to remove the background
+                processed_image = remove_bg(temp_file_path)
+                # Delete the temporary file
+                os.remove(temp_file_path)
+
+                if processed_image:
+                    base64_encoded_data = base64.b64encode(processed_image)
+                    base64_string = base64_encoded_data.decode('utf-8')
+                    image_data_uri = f'data:{content_type};base64,{base64_string}'
+                    return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
+                else:
+                    base64_encoded_data = base64.b64encode(image_data)
+                    base64_string = base64_encoded_data.decode('utf-8')
+                    image_data_uri = f'data:{content_type};base64,{base64_string}'
+                    return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
         else:
-            return JsonResponse({'error': f"Failed to download icon for {program_name} from the URL: {url}"},
-                                status=status.HTTP_200_OK)
+            return JsonResponse({'error': "Failed to download the image."}, status=400)
 
 
 def search_icon(program_name: str, program_id: str) -> HttpResponse:
@@ -159,6 +188,7 @@ class IconViewSet(viewsets.ModelViewSet):
 
         hash_string = f"{program_name.strip()}{program_id}{salt.strip()}"
         expected_hash = hashlib.sha256(hash_string.encode()).hexdigest()
+        print(expected_hash)
 
         if not provided_hash or provided_hash.strip() != expected_hash or len(provided_hash.strip()) != 64:
             return JsonResponse({"error": "Hash validation failed."}, status=status.HTTP_400_BAD_REQUEST)
