@@ -64,29 +64,25 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
 
             # Open the temporary file with PIL to check for transparency
             icon = Image.open(temp_file_path)
+            # Example segment for processing and returning the image
             if has_transparent_background(icon):
+                # Image is transparent, encode and return as is
                 base64_encoded_data = base64.b64encode(image_data)
-                base64_string = base64_encoded_data.decode('utf-8')
-                image_data_uri = f'data:{content_type};base64,{base64_string}'
-                return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
             else:
-                # Process the image to remove the background
+                # Image is not transparent, remove background and encode
                 processed_image = remove_bg(temp_file_path)
-                # Delete the temporary file
-                os.remove(temp_file_path)
-
                 if processed_image:
-                    base64_encoded_data = base64.b64encode(processed_image)
-                    base64_string = base64_encoded_data.decode('utf-8')
-                    image_data_uri = f'data:{content_type};base64,{base64_string}'
-                    return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
+                    # Convert PIL Image to bytes
+                    img_byte_arr = BytesIO()
+                    processed_image.save(img_byte_arr, format='PNG')
+                    base64_encoded_data = base64.b64encode(img_byte_arr.getvalue())
                 else:
+                    # Fallback if processing failed
                     base64_encoded_data = base64.b64encode(image_data)
-                    base64_string = base64_encoded_data.decode('utf-8')
-                    image_data_uri = f'data:{content_type};base64,{base64_string}'
-                    return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
-        else:
-            return JsonResponse({'error': "Failed to download the image."}, status=400)
+
+            base64_string = base64_encoded_data.decode('utf-8')
+            image_data_uri = f'data:{content_type};base64,{base64_string}'
+            return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
 
 
 def search_icon(program_name: str, program_id: str) -> HttpResponse:
