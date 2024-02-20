@@ -61,7 +61,8 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
 
             icon = Image.open(temp_file_path)
             # Example segment for processing and returning the image
-            if has_transparent_background(icon, program_name):
+            #if has_transparent_background(icon, program_name): #todo
+            if True:
                 # Image is transparent, encode and return as is
                 base64_encoded_data = base64.b64encode(image_data)
             else:
