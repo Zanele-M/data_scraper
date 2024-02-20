@@ -39,9 +39,9 @@ def fetch_google_search(query: str, page_size: int = 3, output_file: str = None)
 
     client = HTTPClient(url, retry_count=3, backoff_factor=1.0)
 
-    #response = client.request("GET", params=params)
+    response = client.request("GET", params=params)
 
-    result = {'organic_results': [{'position': 1, 'page': 1, 'domain': 'www.computerbase.de', 'link': 'https://www.computerbase.de/forum/threads/downloads-stoppen-kurz-vorm-ende.1468246/', 'title': 'Downloads stoppen kurz vorm Ende - Forum', 'description': '19.04.2015 — hallo NG, folgendes Problem erlebte ich heute erstmals mit meinem Notebook beim Download der neuesten MS-Updates zu meinem Win7 32-bit: von\xa0...'}, {'position': 2, 'page': 1, 'domain': 'www.computerbase.de', 'link': 'https://www.computerbase.de/forum/threads/downloads-werden-nach-download-sofort-geloescht.1243785/', 'title': 'downloads werden nach download sofort gelöscht....', 'description': '19.08.2013 — wenn ich über den windows downloadmanager dateien runterlade, unabhängig von der datei, werden diese zwar runtergeladen aber anschliessend\xa0...'}], 'total_results_count': 54}
+    result = response.json()
 
     print('result', result)
     if 'organic_results' in result and result['organic_results']:
