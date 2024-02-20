@@ -62,10 +62,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
             processed_image = rembg(temp_file_path)
             print(processed_image)
             if processed_image:
-                # Convert PIL Image to bytes
-                img_byte_arr = BytesIO()
-                # processed_image.save(img_byte_arr, format=content_type)
-                base64_encoded_data = base64.b64encode(img_byte_arr.getvalue())
+                base64_encoded_data = base64.b64encode(processed_image)
             else:
                 # Fallback if processing failed
                 base64_encoded_data = base64.b64encode(image_data)
