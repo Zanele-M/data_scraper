@@ -59,9 +59,8 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
             with open(temp_file_path, 'wb') as file:
                 file.write(image_data)
 
-            # Open the temporary file with PIL to check for transparency
-            icon = Image.open(temp_file_path)
             processed_image = rembg(temp_file_path)
+            print(processed_image)
             if processed_image:
                 # Convert PIL Image to bytes
                 img_byte_arr = BytesIO()
