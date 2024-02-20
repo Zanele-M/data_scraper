@@ -6,6 +6,7 @@ class SearchTerm(models.Model):
     date_searched = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now_add=True)
     attempts = models.IntegerField(default=0)
+    match = models.BooleanField(null=True)
 
     def __str__(self):
         return self.term
