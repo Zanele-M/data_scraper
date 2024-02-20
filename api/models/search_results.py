@@ -11,7 +11,6 @@ class SearchResults(models.Model):
     date_added = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
     program_id = models.ForeignKey(Program, on_delete=models.CASCADE)
-    match = models.BooleanField(null=True)
 
     def __str__(self):
         return self.url

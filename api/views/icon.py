@@ -112,16 +112,13 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
             continue
 
         for item in google_response:
-            print("this is the item link", item['link'])
-
-
             if re.match(pattern, item['link']):
+                print("this is the item link", item['link'])
                 SearchResults.objects.create(
                     search_term=search_term_instance,
                     program_id=program_instance,
                     position=item['position'],
-                    url=item['link'],
-                    match=True
+                    url=item['link']
                 )
                 extraction_response = extract_icon(item['link'], search_term_instance, program_name)
                 if extraction_response.status_code in [status.HTTP_200_OK]:
@@ -129,13 +126,6 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
                 else:
                     logger.error("Error during extraction, attempting next site if available.")
             else:
-                SearchResults.objects.create(
-                    search_term=search_term_instance,
-                    program_id=program_instance,
-                    position=item['position'],
-                    url=item['link'],
-                    match=False
-                )
                 logger.error(f"Url {item['link']} does not match the pattern {pattern}")
 
     execution_time = time.time() - start_time
@@ -199,8 +189,7 @@ class IconViewSet(viewsets.ModelViewSet):
             queryset = self.queryset.filter(
                 program_id__program_id=program_id,
                 program_id__program_name=program_name.strip(),
-                last_updated__gte=one_month_ago,
-                match=True
+                last_updated__gte=one_month_ago
             ).first()
             if queryset and queryset.url:
                 search_term_instance = queryset.search_term
