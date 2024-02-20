@@ -72,7 +72,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
                 if processed_image:
                     # Convert PIL Image to bytes
                     img_byte_arr = BytesIO()
-                    processed_image.save(img_byte_arr, format='PNG')
+                    # processed_image.save(img_byte_arr, format=content_type)
                     base64_encoded_data = base64.b64encode(img_byte_arr.getvalue())
                 else:
                     # Fallback if processing failed
