@@ -87,6 +87,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
 
             base64_string = base64_encoded_data.decode('utf-8')
             image_data_uri = f'data:{content_type};base64,{base64_string}'
+            icon.close()
             return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
 
 
