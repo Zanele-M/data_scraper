@@ -70,17 +70,13 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
 
             # Example segment for processing and returning the image
             # if has_transparent_background(icon, program_name): #todo eror handlings
-            print("1")
             if icon.has_transparency_data:
                 # Image is transparent, encode and return as is
-                print("transparency_data", icon.has_transparency_data)
                 base64_encoded_data = base64.b64encode(image_data)
             else:
-                print("2")
-                print("getpixel",icon.getpixel((1, 1)))
-
+                if (icon.mode == "L"):
+                    icon = icon.convert('RGB')
                 pixels = icon.getpixel((1, 1))
-                print("3")
 
                 if pixels[0] == 255 and pixels[1] == 255 and pixels[2] == 255:
                     print("4")
