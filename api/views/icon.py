@@ -23,7 +23,6 @@ from api.serializer.search_result import SearchResultsSerializer
 from api.utils.google_search import fetch_google_search
 from api.utils.html_content_parser import extract_html_element_attribute, download_image
 from api.utils.rembg import rembg
-from api.utils.rm_background import has_transparent_background, remove_bg
 
 logger = logging.getLogger(__name__)
 
@@ -62,21 +61,15 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
 
             # Open the temporary file with PIL to check for transparency
             icon = Image.open(temp_file_path)
-            # Example segment for processing and returning the image
-            if has_transparent_background(icon):
-                # Image is transparent, encode and return as is
-                base64_encoded_data = base64.b64encode(image_data)
+            processed_image = rembg(temp_file_path)
+            if processed_image:
+                # Convert PIL Image to bytes
+                img_byte_arr = BytesIO()
+                # processed_image.save(img_byte_arr, format=content_type)
+                base64_encoded_data = base64.b64encode(img_byte_arr.getvalue())
             else:
-                # Image is not transparent, remove background and encode
-                processed_image = rembg(temp_file_path)
-                if processed_image:
-                    # Convert PIL Image to bytes
-                    img_byte_arr = BytesIO()
-                    # processed_image.save(img_byte_arr, format=content_type)
-                    base64_encoded_data = base64.b64encode(img_byte_arr.getvalue())
-                else:
-                    # Fallback if processing failed
-                    base64_encoded_data = base64.b64encode(image_data)
+                # Fallback if processing failed
+                base64_encoded_data = base64.b64encode(image_data)
 
             base64_string = base64_encoded_data.decode('utf-8')
             image_data_uri = f'data:{content_type};base64,{base64_string}'
