@@ -59,13 +59,13 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
             with open(temp_file_path, 'wb') as file:
                 file.write(image_data)
 
-            processed_image = rembg(temp_file_path)
             icon = Image.open(temp_file_path)
             # Example segment for processing and returning the image
-            if has_transparent_background(icon):
+            if has_transparent_background(icon, program_name):
                 # Image is transparent, encode and return as is
                 base64_encoded_data = base64.b64encode(image_data)
             else:
+                processed_image = rembg(temp_file_path)
                 if processed_image:
                     base64_encoded_data = base64.b64encode(processed_image)
                 else:
