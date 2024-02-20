@@ -23,6 +23,7 @@ from api.models.search_term import SearchTerm
 from api.serializer.search_result import SearchResultsSerializer
 from api.utils.google_search import fetch_google_search
 from api.utils.html_content_parser import extract_html_element_attribute, download_image
+from api.utils.rembg import rembg
 from api.utils.rm_background import has_transparent_background, remove_bg
 
 logger = logging.getLogger(__name__)
@@ -70,7 +71,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
                 base64_encoded_data = base64.b64encode(image_data)
             else:
                 # Image is not transparent, remove background and encode
-                processed_image = remove_bg(temp_file_path)
+                processed_image = rembg(temp_file_path)
                 if processed_image:
                     # Convert PIL Image to bytes
                     img_byte_arr = BytesIO()
