@@ -26,7 +26,7 @@ from api.utils.rembg import rembg, has_transparent_background
 
 logger = logging.getLogger(__name__)
 
-MAX_ATTEMPTS = 1
+MAX_ATTEMPTS = 15
 
 
 def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) -> HttpResponse | Response:
@@ -121,7 +121,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
             )
 
             if re.match(pattern, item['link']):
-                print("I get here")
+                print("I get here", item['link'], pattern)
                 extraction_response = extract_icon(item['link'], search_term_instance, program_name)
                 if extraction_response.status_code in [status.HTTP_200_OK]:
                     return extraction_response  # Successfully found and extracted, or not found but processed
