@@ -141,9 +141,10 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
             else:
                 logger.error(f"Url {item['link']} does not match the pattern {pattern}")
 
+
     execution_time = time.time() - start_time
     print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
-    return JsonResponse({'error': f"No links found across all sites for {program_name}"}, status=status.HTTP_200_OK)
+    return JsonResponse({'error': f"Empty response from SpaceSerp for {program_name}"}, status=status.HTTP_200_OK)
 
 
 class IconViewSet(viewsets.ModelViewSet):

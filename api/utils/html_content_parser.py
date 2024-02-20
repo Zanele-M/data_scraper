@@ -3,11 +3,16 @@ from bs4 import BeautifulSoup
 from typing import Union, List
 from decouple import config
 
-
 from api.client.http_client import HTTPClient
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename=config('log_path'), encoding='utf-8', level=logging.WARNING)
+
+# todo move it inside of the  http client and also add user agent to the config
+# test for instances where the download does not work
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+}
 
 
 def extract_html_element_attribute(url: str, search_criteria: dict, attribute: str) -> Union[
@@ -25,9 +30,6 @@ def extract_html_element_attribute(url: str, search_criteria: dict, attribute: s
         Union[str, List[str], List[dict]]: The value(s) of the specified attribute on success,
         or a list of descriptive error messages.
     """
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
-    }
 
     # Create an instance of HTTPClient internally
     client = HTTPClient(url, retry_count=3, backoff_factor=1.5)
@@ -65,9 +67,11 @@ def download_image(url: str):
     client = HTTPClient(url, retry_count=3, backoff_factor=1.0)
 
     try:
-        response = client.request("GET")
+        response = client.request("GET", headers=headers)
         if response.status_code == 200:
             content_type = response.headers.get('Content-Type')
+            # todo 1. dont use external formaat
+            # 2. create a allowlist for file formats (png, gif, jpg, jpeg, webp)
             return content_type, response.content
         else:
             logger.error(f"Failed to download image from {url}.")

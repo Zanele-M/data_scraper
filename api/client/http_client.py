@@ -43,9 +43,9 @@ class HTTPClient:
                 if response.status_code == 200:
                     return response
                 else:
-                    logger.error(f"Expected status code 200")
+                    logger.error(f"Expected status code 200 but got {response.status_code} for {self.url}")
             except Exception as e:
-                logger.error("Error occurred while fetching or processing the response", exc_info=e)
+                logger.error(f"Error occurred while fetching or processing {self.url}", exc_info=e)
             time.sleep(self.backoff_factor * 60)
             attempts += 1
 

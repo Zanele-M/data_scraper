@@ -32,11 +32,14 @@ def fetch_google_search(query: str, page_size: int = 3, output_file: str = None)
     params = {
         "apiKey": api_key,
         "q": encoded_query,
-        "location": "Berlin,Berlin,Germany",
-        "domain": "google.de",
+        # "location": "Berlin,Berlin,Germany",
+        # "domain": "google.de",
         "gl": "de",
         "hl": "de",
-        "pageSize": page_size
+        "resultFormat": "json",
+        "resultBlocks": "organic_results"
+
+        # "pageSize": page_size
     }
 
     client = HTTPClient(url, retry_count=3, backoff_factor=1.0)
@@ -45,7 +48,7 @@ def fetch_google_search(query: str, page_size: int = 3, output_file: str = None)
 
     result = response.json()
 
-    print('result', result)
+    print(f'result for {query}', result)
     if 'organic_results' in result and result['organic_results']:
         links = []
         for item in result['organic_results']:
