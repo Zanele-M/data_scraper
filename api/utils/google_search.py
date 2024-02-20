@@ -7,6 +7,8 @@ from api.client.http_client import HTTPClient
 
 logger = logging.getLogger(__name__)
 
+logging.basicConfig(filename=config('log_path'), encoding='utf-8', level=logging.WARNING)
+
 
 def fetch_google_search(query: str, page_size: int = 3, output_file: str = None) -> list[dict[str, Any]]:
     """

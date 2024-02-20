@@ -1,11 +1,13 @@
 import logging
-import requests
 from bs4 import BeautifulSoup
-from typing import Union, List, Dict, Any
+from typing import Union, List
+from decouple import config
+
 
 from api.client.http_client import HTTPClient
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(filename=config('log_path'), encoding='utf-8', level=logging.WARNING)
 
 
 def extract_html_element_attribute(url: str, search_criteria: dict, attribute: str) -> Union[

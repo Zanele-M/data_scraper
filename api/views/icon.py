@@ -1,7 +1,6 @@
 import base64
 import tempfile
 import time
-from io import BytesIO
 
 from PIL import Image
 from django.http import HttpResponse, JsonResponse
@@ -22,9 +21,10 @@ from api.models.search_term import SearchTerm
 from api.serializer.search_result import SearchResultsSerializer
 from api.utils.google_search import fetch_google_search
 from api.utils.html_content_parser import extract_html_element_attribute, download_image
-from api.utils.rembg import rembg, has_transparent_background
+from api.utils.rembg import rembg
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(filename=config('log_path'), encoding='utf-8', level=logging.WARNING)
 
 MAX_ATTEMPTS = 1
 
@@ -51,7 +51,10 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
                             status=status.HTTP_200_OK)
     else:
         image_url = meta_result[0] if isinstance(meta_result, list) else meta_result
+        logger.info(image_url)
+        print(image_url)
         content_type, image_data = download_image(image_url)
+
         if content_type and image_data:
             # Save the downloaded image to a temporary file
             temp_file = tempfile.NamedTemporaryFile(delete=False)
