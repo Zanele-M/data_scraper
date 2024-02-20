@@ -22,7 +22,7 @@ from api.models.search_term import SearchTerm
 from api.serializer.search_result import SearchResultsSerializer
 from api.utils.google_search import fetch_google_search
 from api.utils.html_content_parser import extract_html_element_attribute, download_image
-from api.utils.rembg import rembg
+from api.utils.rembg import rembg, has_transparent_background
 
 logger = logging.getLogger(__name__)
 
@@ -60,12 +60,17 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
                 file.write(image_data)
 
             processed_image = rembg(temp_file_path)
-            print(processed_image)
-            if processed_image:
-                base64_encoded_data = base64.b64encode(processed_image)
-            else:
-                # Fallback if processing failed
+            icon = Image.open(temp_file_path)
+            # Example segment for processing and returning the image
+            if has_transparent_background(icon):
+                # Image is transparent, encode and return as is
                 base64_encoded_data = base64.b64encode(image_data)
+            else:
+                if processed_image:
+                    base64_encoded_data = base64.b64encode(processed_image)
+                else:
+                    # Fallback if processing failed
+                    base64_encoded_data = base64.b64encode(image_data)
 
             base64_string = base64_encoded_data.decode('utf-8')
             image_data_uri = f'data:{content_type};base64,{base64_string}'
@@ -116,6 +121,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
             )
 
             if re.match(pattern, item['link']):
+                print("I get here")
                 extraction_response = extract_icon(item['link'], search_term_instance, program_name)
                 if extraction_response.status_code in [status.HTTP_200_OK]:
                     return extraction_response  # Successfully found and extracted, or not found but processed
