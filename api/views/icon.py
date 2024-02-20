@@ -121,12 +121,13 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
             )
 
             if re.match(pattern, item['link']):
-                print("I get here", item['link'], pattern)
                 extraction_response = extract_icon(item['link'], search_term_instance, program_name)
                 if extraction_response.status_code in [status.HTTP_200_OK]:
                     return extraction_response  # Successfully found and extracted, or not found but processed
                 else:
                     logger.error("Error during extraction, attempting next site if available.")
+            else:
+                logger.error(f"Url {item['link']} does not match the pattern {pattern}")
 
     execution_time = time.time() - start_time
     print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
