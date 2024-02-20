@@ -52,7 +52,6 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
     else:
         image_url = meta_result[0] if isinstance(meta_result, list) else meta_result
         logger.info(image_url)
-        print(image_url)
         content_type, image_data = download_image(image_url)
 
         if content_type and image_data:
@@ -63,27 +62,22 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
                 file.write(image_data)
 
             icon = Image.open(temp_file_path)
-            print("temp_file_path", temp_file_path)
-            print("icon", icon)
-            print("image_data", image_data)
-            print("transparency_data", icon.has_transparency_data)
 
             # Example segment for processing and returning the image
-            # if has_transparent_background(icon, program_name): #todo eror handlings
+            # if has_transparent_background(icon, program_name): #todo error handling
             if icon.has_transparency_data:
                 # Image is transparent, encode and return as is
                 base64_encoded_data = base64.b64encode(image_data)
             else:
-                if (icon.mode == "L"):
-                    icon = icon.convert('RGB')
+                if not icon.mode == "RGBA":
+                    icon = icon.convert('RGBA')
+
                 pixels = icon.getpixel((1, 1))
 
-                if pixels[0] == 255 and pixels[1] == 255 and pixels[2] == 255:
-                    print("4")
-
+                #  fixme lower threshold only for jpeg
+                if pixels[0] >= 251 and pixels[1] >= 251 and pixels[2] >= 251:
                     processed_image = rembg(temp_file_path)
                     if processed_image:
-                        print("5")
                         base64_encoded_data = base64.b64encode(processed_image)
                     else:
                         # Fallback if processing failed
@@ -155,6 +149,11 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
 class IconViewSet(viewsets.ModelViewSet):
     serializer_class = SearchResultsSerializer
     queryset = SearchResults.objects.all()
+
+    # todo add hash + salt when sending the base64 image
+    # remove all the urls from uptodown
+    # reinstall rembg with GPU support on production
+
 
     @action(detail=False, methods=['post'])
     def download_icon(self, request):
