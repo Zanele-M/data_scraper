@@ -63,6 +63,10 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
                 file.write(image_data)
 
             icon = Image.open(temp_file_path)
+            print("temp_file_path", temp_file_path)
+            print("icon", icon)
+            print("image_data", image_data)
+
 
             # Example segment for processing and returning the image
             # if has_transparent_background(icon, program_name): #todo eror handlings
