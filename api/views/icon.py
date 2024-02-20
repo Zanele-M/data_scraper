@@ -60,17 +60,22 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
                 file.write(image_data)
 
             icon = Image.open(temp_file_path)
+
             # Example segment for processing and returning the image
-            #if has_transparent_background(icon, program_name): #todo
-            if True:
+            # if has_transparent_background(icon, program_name): #todo eror handlings
+            if icon.has_transparency_data:
                 # Image is transparent, encode and return as is
                 base64_encoded_data = base64.b64encode(image_data)
             else:
-                processed_image = rembg(temp_file_path)
-                if processed_image:
-                    base64_encoded_data = base64.b64encode(processed_image)
+                pixels = icon.getpixel((1, 1))
+                if pixels[0] == 255 and pixels[1] == 255 and pixels[2] == 255:
+                    processed_image = rembg(temp_file_path)
+                    if processed_image:
+                        base64_encoded_data = base64.b64encode(processed_image)
+                    else:
+                        # Fallback if processing failed
+                        base64_encoded_data = base64.b64encode(image_data)
                 else:
-                    # Fallback if processing failed
                     base64_encoded_data = base64.b64encode(image_data)
 
             base64_string = base64_encoded_data.decode('utf-8')
