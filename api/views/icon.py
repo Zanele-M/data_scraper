@@ -1,5 +1,4 @@
 import base64
-import os
 import tempfile
 import time
 from io import BytesIO
@@ -28,18 +27,14 @@ from api.utils.rm_background import has_transparent_background, remove_bg
 
 logger = logging.getLogger(__name__)
 
-MAX_ATTEMPTS = 10000
+MAX_ATTEMPTS = 1
+
 
 def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) -> HttpResponse | Response:
     """
     Extract the required meta attribute from the URL and respond with the image.
     """
-
     start_time = time.time()
-    if search_term_instance.attempts >= MAX_ATTEMPTS:
-        return JsonResponse({'error': f"Maximum number of download attempts reached for {program_name}."},
-                            status=status.HTTP_200_OK)
-
     # Update attempt count for the search term
     search_term_instance.attempts += 1
     search_term_instance.save()
@@ -50,9 +45,11 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
     execution_time = time.time() - start_time
     print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
     if isinstance(meta_result, list) and meta_result and isinstance(meta_result[0], dict) and "error" in meta_result[0]:
-        return JsonResponse({'error': f'Could not parse from the url: {url} for program {program_name}'}, status=status.HTTP_200_OK)
+        return JsonResponse({'error': f'Could not parse from the url: {url} for program {program_name}'},
+                            status=status.HTTP_200_OK)
     elif isinstance(meta_result, list) and not meta_result:
-        return JsonResponse({'error': f'Could not parse from the url: {url} for program {program_name}'}, status=status.HTTP_200_OK)
+        return JsonResponse({'error': f'Could not parse from the url: {url} for program {program_name}'},
+                            status=status.HTTP_200_OK)
     else:
         image_url = meta_result[0] if isinstance(meta_result, list) else meta_result
         content_type, image_data = download_image(image_url)
@@ -202,7 +199,6 @@ class IconViewSet(viewsets.ModelViewSet):
             if queryset and queryset.url:
                 search_term_instance = queryset.search_term
                 if queryset:
-                    print("this is the item link", queryset.url)
                     return extract_icon(queryset.url, search_term_instance, program_name)
 
             return search_icon(program_name, program_id)
