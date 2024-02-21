@@ -36,6 +36,16 @@ class HTTPClient:
         Returns:
             Any: The response data or the raw Response object if return_raw is True.
         """
+        default_headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+        }
+
+        # If headers were provided, merge them with the defaults
+        if headers:
+            headers = {**default_headers, **headers}
+        else:  # Otherwise use the default headers
+            headers = default_headers
+
         attempts = 0
         while attempts < self.retry_count:
             try:

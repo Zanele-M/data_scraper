@@ -8,12 +8,6 @@ from api.client.http_client import HTTPClient
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename=config('log_path'), encoding='utf-8', level=logging.WARNING)
 
-# todo move it inside of the  http client and also add user agent to the config
-# test for instances where the download does not work
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
-}
-
 
 def extract_html_element_attribute(url: str, search_criteria: dict, attribute: str) -> Union[
     str, List[str], List[dict]]:
@@ -34,7 +28,7 @@ def extract_html_element_attribute(url: str, search_criteria: dict, attribute: s
     # Create an instance of HTTPClient internally
     client = HTTPClient(url, retry_count=3, backoff_factor=1.5)
 
-    response = client.request("GET", headers=headers)
+    response = client.request("GET")
     if isinstance(response, dict) and "error" in response:
         return [{"error": "Error fetching the page"}]  # Adjusted error message for clarity
 
@@ -67,18 +61,15 @@ def download_image(url: str):
     client = HTTPClient(url, retry_count=3, backoff_factor=1.0)
 
     try:
-        response = client.request("GET", headers=headers)
+        response = client.request("GET")
         if response.status_code == 200:
-            content_type = response.headers.get('Content-Type')
-            # todo 1. dont use external formaat
-            # 2. create a allow list for file formats (png, gif, jpg, jpeg, webp)
-            return content_type, response.content
+            return response.content
         else:
             logger.error(f"Failed to download image from {url}.")
-            return None, None
+            return None
     except AttributeError:
         logger.error(f"Response object does not have the expected attributes.")
-        return None, None
+        return None
     except Exception as e:
         logger.error(f"An error occurred: {e}")
-        return None, None
+        return None

@@ -52,9 +52,9 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
     else:
         image_url = meta_result[0] if isinstance(meta_result, list) else meta_result
         logger.info(image_url)
-        content_type, image_data = download_image(image_url)
+        image_data = download_image(image_url)
 
-        if content_type and image_data:
+        if image_data and image_data != None:
             # Save the downloaded image to a temporary file
             temp_file = tempfile.NamedTemporaryFile(delete=False)
             temp_file_path = temp_file.name
@@ -62,11 +62,13 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
                 file.write(image_data)
 
             icon = Image.open(temp_file_path)
+            icon_format = icon.format
 
-            # Example segment for processing and returning the image
-            # if has_transparent_background(icon, program_name): #todo error handling
+            if icon_format not in ["PNG", "GIF", "JPG", "JPEG", "WEBP"]:
+                return JsonResponse({'error': f"The file format '{icon_format}' is not supported."},
+                                    status=status.HTTP_200_OK)
+
             if icon.has_transparency_data:
-                # Image is transparent, encode and return as is
                 base64_encoded_data = base64.b64encode(image_data)
             else:
                 if not icon.mode == "RGBA":
@@ -86,9 +88,12 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
                     base64_encoded_data = base64.b64encode(image_data)
 
             base64_string = base64_encoded_data.decode('utf-8')
-            image_data_uri = f'data:{content_type};base64,{base64_string}'
+            image_data_uri = f'data:{icon_format};base64,{base64_string}'
             icon.close()
             return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse({'error': f"Failed to download image from {url} for program {program_name}"},
+                                status=status.HTTP_200_OK)
 
 
 def search_icon(program_name: str, program_id: str) -> HttpResponse:
@@ -142,7 +147,6 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
             else:
                 logger.error(f"Url {item['link']} does not match the pattern {pattern}")
 
-
     execution_time = time.time() - start_time
     print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
     return JsonResponse({'error': f"Empty response from SpaceSerp for {program_name}"}, status=status.HTTP_200_OK)
@@ -153,9 +157,8 @@ class IconViewSet(viewsets.ModelViewSet):
     queryset = SearchResults.objects.all()
 
     # todo add hash + salt when sending the base64 image
-    # remove all the urls from uptodown
     # reinstall rembg with GPU support on production
-
+    # crop the image so it focuses on the motive of the image
 
     @action(detail=False, methods=['post'])
     def download_icon(self, request):
@@ -214,6 +217,7 @@ class IconViewSet(viewsets.ModelViewSet):
             if queryset and queryset.url:
                 search_term_instance = queryset.search_term
                 if queryset:
+                    # match pattern on the url
                     return extract_icon(queryset.url, search_term_instance, program_name)
 
             return search_icon(program_name, program_id)
