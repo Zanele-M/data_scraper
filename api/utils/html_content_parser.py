@@ -71,7 +71,7 @@ def download_image(url: str):
         if response.status_code == 200:
             content_type = response.headers.get('Content-Type')
             # todo 1. dont use external formaat
-            # 2. create a allowlist for file formats (png, gif, jpg, jpeg, webp)
+            # 2. create a allow list for file formats (png, gif, jpg, jpeg, webp)
             return content_type, response.content
         else:
             logger.error(f"Failed to download image from {url}.")
