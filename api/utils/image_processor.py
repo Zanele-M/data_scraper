@@ -2,6 +2,8 @@ import logging
 import base64
 import tempfile
 
+from rest_framework import status
+
 from api.utils.html_content_parser import download_image
 from PIL import Image
 from decouple import config
@@ -48,13 +50,15 @@ def process_icon_image(image_url):
                 else:
                     base64_encoded_data = base64.b64encode(image_data)
 
+
             base64_string = base64_encoded_data.decode('utf-8')
-            image_data_uri = f'data:{icon_format};base64,{base64_string}'
+            image_data_uri = f'data:image/{icon_format};base64,{base64_string}'
             icon.close()
-            return JsonResponse({'image_data': image_data_uri}, status=200)
+            return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
         else:
-            return JsonResponse({'error': 'Failed to download image or no image data received.'}, status=200)
+            return JsonResponse({'error': 'Failed to download image or no image data received.'}, status=status.HTTP_200_OK)
 
     except Exception as e:
         logging.exception(f"Error processing image from {image_url}: {e}")
-        return JsonResponse({'error': 'An error occurred while processing the image.'}, status=500)
+        return JsonResponse({'error': 'An error occurred while processing the image.'}, status=status.HTTP_200_OK)
+
