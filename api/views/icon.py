@@ -191,6 +191,7 @@ class IconViewSet(viewsets.ModelViewSet):
             # Extract and trim the image URL from request data
             icon_url = request.data.get("icon-url")
             api_key = request.headers.get("api-key")
+            rm_bg = request.data.get("rm-bg")
 
             # Check if the API key is provided and valid
             if not api_key or api_key != config('API_KEY') or len(api_key) != 41:
@@ -219,8 +220,8 @@ class IconViewSet(viewsets.ModelViewSet):
             validator = URLValidator()
             validator(icon_url)
 
-            # If validations pass, process the image
-            return process_icon_image(icon_url)
+            # If validations pass, process the
+            return process_icon_image(icon_url, rm_bg)
 
         except ValidationError:
             # Catch and handle the invalid URL format error
