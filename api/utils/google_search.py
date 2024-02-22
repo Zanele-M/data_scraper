@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(filename=config('log_path'), encoding='utf-8', level=logging.WARNING)
 
 
-def fetch_google_search(query: str, page_size: int = 3, output_file: str = None) -> list[dict[str, Any]]:
+def fetch_google_search(query: str, output_file: str = None) -> list[dict[str, Any]]:
     """
     Fetches links from Google search results for a given query using the SpaceSERP API.
 
@@ -19,7 +19,6 @@ def fetch_google_search(query: str, page_size: int = 3, output_file: str = None)
     is also saved to a JSON file for persistence.
     Args:
         query (str): The search query.
-        page_size (int, optional): The number of search results to return. Defaults to 1.
         output_file (str, optional): Path to the file where the search result will be saved.
                                      If None, the result is not written to a file. Defaults to None.
 

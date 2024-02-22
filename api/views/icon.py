@@ -1,16 +1,11 @@
-import base64
-import tempfile
 import time
-
-from PIL import Image
-from django.http import HttpResponse, JsonResponse
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
 import logging
 import re
-from rest_framework.response import Response
 import hashlib
 
+from django.http import HttpResponse, JsonResponse
+from rest_framework import viewsets
+from rest_framework.response import Response
 from django.utils import timezone
 from datetime import timedelta
 from decouple import config
@@ -20,8 +15,12 @@ from api.models.search_results import SearchResults
 from api.models.search_term import SearchTerm
 from api.serializer.search_result import SearchResultsSerializer
 from api.utils.google_search import fetch_google_search
-from api.utils.html_content_parser import extract_html_element_attribute, download_image
-from api.utils.rembg import rembg
+from api.utils.html_content_parser import extract_html_element_attribute
+from api.utils.image_processor import process_icon_image
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
+from rest_framework.decorators import action
+from rest_framework import status
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename=config('log_path'), encoding='utf-8', level=logging.WARNING)
@@ -52,48 +51,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
     else:
         image_url = meta_result[0] if isinstance(meta_result, list) else meta_result
         logger.info(image_url)
-        image_data = download_image(image_url)
-
-        if image_data and image_data != None:
-            # Save the downloaded image to a temporary file
-            temp_file = tempfile.NamedTemporaryFile(delete=False)
-            temp_file_path = temp_file.name
-            with open(temp_file_path, 'wb') as file:
-                file.write(image_data)
-
-            icon = Image.open(temp_file_path)
-            icon_format = icon.format
-
-            if icon_format not in ["PNG", "GIF", "JPG", "JPEG", "WEBP"]:
-                return JsonResponse({'error': f"The file format '{icon_format}' is not supported."},
-                                    status=status.HTTP_200_OK)
-
-            if icon.has_transparency_data:
-                base64_encoded_data = base64.b64encode(image_data)
-            else:
-                if not icon.mode == "RGBA":
-                    icon = icon.convert('RGBA')
-
-                pixels = icon.getpixel((1, 1))
-
-                #  fixme lower threshold only for jpeg
-                if pixels[0] >= 251 and pixels[1] >= 251 and pixels[2] >= 251:
-                    processed_image = rembg(temp_file_path)
-                    if processed_image:
-                        base64_encoded_data = base64.b64encode(processed_image)
-                    else:
-                        # Fallback if processing failed
-                        base64_encoded_data = base64.b64encode(image_data)
-                else:
-                    base64_encoded_data = base64.b64encode(image_data)
-
-            base64_string = base64_encoded_data.decode('utf-8')
-            image_data_uri = f'data:{icon_format};base64,{base64_string}'
-            icon.close()
-            return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
-        else:
-            return JsonResponse({'error': f"Failed to download image from {url} for program {program_name}"},
-                                status=status.HTTP_200_OK)
+        return process_icon_image(image_url)
 
 
 def search_icon(program_name: str, program_id: str) -> HttpResponse:
@@ -124,7 +82,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
         search_term_instance.save()
 
         search_term = f"{program_name} site:{site} inurl:{inurl}"
-        google_response = fetch_google_search(search_term, 3)
+        google_response = fetch_google_search(search_term)
 
         if not google_response or isinstance(google_response, list) and google_response[0].get("error"):
             logger.error(f"No links found in the Google API response for {search_term}")
@@ -225,4 +183,49 @@ class IconViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print(e)
             return JsonResponse({'error': 'An unexpected error occurred.'},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['post'])
+    def remove_bg_img(self, request):
+        try:
+            # Extract and trim the image URL from request data
+            icon_url = request.headers.get("icon-url")
+            api_key = request.headers.get("api-key")
+
+            # Check if the API key is provided and valid
+            if not api_key or api_key != config('API_KEY') or len(api_key) != 41:
+                return JsonResponse({"error": "Invalid API key."}, status=status.HTTP_401_UNAUTHORIZED)
+
+            # Check if the image URL is provided
+            if not icon_url:
+                return JsonResponse({'error': 'Icon URL is required and cannot be empty.'},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+            # Trim the image URL and API key
+            icon_url = icon_url.strip()
+            api_key = api_key.strip()
+
+            #todo add hash
+
+            if api_key != config('API_KEY') or len(api_key) != 41:
+                return JsonResponse({"error": "Invalid API key."}, status=status.HTTP_401_UNAUTHORIZED)
+
+            # Check if the trimmed image URL is not empty
+            if not icon_url:
+                return JsonResponse({'error': 'Image URL is required and cannot be empty.'},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+            # Validate the URL format
+            validator = URLValidator()
+            validator(icon_url)
+
+            # If validations pass, process the image
+            return process_icon_image(icon_url)
+
+        except ValidationError:
+            # Catch and handle the invalid URL format error
+            return JsonResponse({'error': 'Invalid Icon URL format.'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            # Catch any other unexpected errors
+            return JsonResponse({'error': f'An unexpected error occurred: {str(e)}'},
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
