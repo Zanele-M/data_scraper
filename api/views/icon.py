@@ -189,7 +189,7 @@ class IconViewSet(viewsets.ModelViewSet):
     def remove_bg_img(self, request):
         try:
             # Extract and trim the image URL from request data
-            icon_url = request.headers.get("icon-url")
+            icon_url = request.data.get("icon-url")
             api_key = request.headers.get("api-key")
 
             # Check if the API key is provided and valid
