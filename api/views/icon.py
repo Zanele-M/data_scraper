@@ -25,7 +25,7 @@ from rest_framework import status
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename=config('log_path'), encoding='utf-8', level=logging.WARNING)
 
-MAX_ATTEMPTS = 1
+MAX_ATTEMPTS = 3
 
 
 def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) -> HttpResponse | Response:
