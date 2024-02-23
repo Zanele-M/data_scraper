@@ -223,9 +223,7 @@ class IconViewSet(viewsets.ModelViewSet):
             return process_icon_image(icon_url, rm_bg)
 
         except ValidationError:
-            # Catch and handle the invalid URL format error
             return JsonResponse({'error': 'Invalid Icon URL format.'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            # Catch any other unexpected errors
             return JsonResponse({'error': f'An unexpected error occurred: {str(e)}'},
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)

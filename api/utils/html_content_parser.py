@@ -58,7 +58,7 @@ def download_image(url: str):
         A tuple of (content_type, image_data) if successful, or (None, None) on failure.
     """
 
-    client = HTTPClient(url, retry_count=3, backoff_factor=1.0)
+    client = HTTPClient(url, retry_count=3, backoff_factor=0.5)
 
     try:
         response = client.request("GET")

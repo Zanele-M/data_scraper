@@ -32,7 +32,9 @@ def process_icon_image(image_url, rm_bg=False):
             icon_format = icon.format
 
             if icon_format not in ["PNG", "GIF", "JPG", "JPEG", "WEBP"]:
-                return JsonResponse({'error': f"The file format '{icon_format}' is not supported."}, status=200)
+                return JsonResponse({
+                    'error': f"The file format '{icon_format}' is not supported for the url {image_url}."},
+                    status=status.HTTP_200_OK)
 
             if hasattr(icon, 'info') and 'transparency' in icon.info:
                 base64_encoded_data = base64.b64encode(image_data)
@@ -61,4 +63,6 @@ def process_icon_image(image_url, rm_bg=False):
 
     except Exception as e:
         logging.exception(f"Error processing image from {image_url}: {e}")
-        return JsonResponse({'error': 'An error occurred while processing the image.'}, status=status.HTTP_200_OK)
+        return JsonResponse(
+            {'error': f'An error occurred while processing the icon for {image_url}.'},
+                status=status.HTTP_200_OK)
