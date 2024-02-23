@@ -56,7 +56,7 @@ def process_icon_image(image_url, rm_bg=False):
             icon.close()
             return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
         else:
-            return JsonResponse({'error': 'Failed to download image or no image data received.'},
+            return JsonResponse({'error': f'Failed to download icon from {image_url}.'},
                                 status=status.HTTP_200_OK)
 
     except Exception as e:
