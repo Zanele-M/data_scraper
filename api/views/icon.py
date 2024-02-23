@@ -174,11 +174,10 @@ class IconViewSet(viewsets.ModelViewSet):
             ).first()
             if queryset and queryset.url:
                 search_term_instance = queryset.search_term
-                if queryset:
-                    # match pattern on the url
-                    return extract_icon(queryset.url, search_term_instance, program_name)
-
-            return search_icon(program_name, program_id)
+                # match pattern on the url
+                return extract_icon(queryset.url, search_term_instance, program_name)
+            else:
+                return search_icon(program_name, program_id)
 
         except Exception as e:
             print(e)
