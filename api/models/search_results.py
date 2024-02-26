@@ -5,7 +5,7 @@ from api.models.search_term import SearchTerm
 
 
 class SearchResults(models.Model):
-    url = models.URLField(max_length=200, unique=True)
+    url = models.URLField(max_length=4000, unique=True)
     search_term = models.ForeignKey(SearchTerm, on_delete=models.CASCADE)
     position = models.IntegerField()
     date_added = models.DateTimeField(auto_now_add=True)
