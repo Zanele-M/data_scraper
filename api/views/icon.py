@@ -75,7 +75,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
         if inurl == '':
             term = f'"{program_name}" site:{site}'
         else:
-            term = f' "{program_name}" site:{site} inurl:{inurl}'
+            term = f'"{program_name}" site:{site} inurl:{inurl}'
 
         search_term_instance, _ = SearchTerm.objects.get_or_create(term=term)
         if search_term_instance.attempts > MAX_ATTEMPTS:
