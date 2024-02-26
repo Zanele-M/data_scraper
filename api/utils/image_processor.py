@@ -14,7 +14,7 @@ from api.utils.rembg import rembg
 logging.basicConfig(filename=config('log_path'), encoding='utf-8', level=logging.WARNING)
 
 
-def process_icon_image(image_url, rm_bg=False):
+def process_icon_image(image_url, rm_bg=True):
     """
     Process and convert the given image URL to a base64 encoded data URI, with error handling.
     """
