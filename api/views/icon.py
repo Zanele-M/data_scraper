@@ -84,7 +84,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
         #     return JsonResponse({'error': f"Maximum number of google search attempts reached for {program_name}"},
         #                         status=status.HTTP_200_OK)
 
-        if search_term_instance.term == term:
+        if not _ and search_term_instance.term == term:
             logger.error(f"Already processed {term}")
             continue
 
