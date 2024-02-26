@@ -45,7 +45,7 @@ def process_icon_image(image_url, rm_bg=True):
                 pixels = icon.getpixel((1, 1))
                 print(pixels)
 
-                if pixels[0] >= 251 and pixels[1] >= 251 and pixels[2] >= 237 and rm_bg:
+                if pixels[0] >= 237 and pixels[1] >= 237 and pixels[2] >= 237 and rm_bg:
                     processed_image = rembg(temp_file_path)
                     if processed_image:
                         base64_encoded_data = base64.b64encode(processed_image)
