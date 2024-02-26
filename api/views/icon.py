@@ -25,7 +25,7 @@ from rest_framework import status
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename=config('log_path'), encoding='utf-8', level=logging.WARNING)
 
-MAX_ATTEMPTS = 3
+MAX_ATTEMPTS = 10
 
 
 def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) -> HttpResponse | Response:
@@ -60,8 +60,9 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
     """
     start_time = time.time()
     sites = [
-        {'site': 'computerbase.de', 'inurl': 'downloads', 'url_pattern': 'https://www.computerbase.de/downloads/*'},
-        {'site': 'uptodown.com', 'inurl': 'windows', 'url_pattern': 'https://.*\\.uptodown\\.com/windows'},
+        {'site': 'softonic.com', 'inurl':'', 'url_pattern': ''},
+        # {'site': 'computerbase.de', 'inurl': 'downloads', 'url_pattern': 'https://www.computerbase.de/downloads/*'},
+        # {'site': 'uptodown.com', 'inurl': 'windows', 'url_pattern': 'https://.*\\.uptodown\\.com/windows'},
     ]
 
     program_instance, _ = Program.objects.get_or_create(program_name=program_name, program_id=program_id)
@@ -71,7 +72,12 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
         inurl = site_info.get('inurl')
         pattern = site_info.get('url_pattern')
 
-        search_term_instance, _ = SearchTerm.objects.get_or_create(term=f"{program_name} site:{site} inurl:{inurl}")
+        if inurl == '':
+            term = f'"{program_name}" site:{site}'
+        else:
+            term = f' "{program_name}" site:{site} inurl:{inurl}'
+
+        search_term_instance, _ = SearchTerm.objects.get_or_create(term=term)
         if search_term_instance.attempts > MAX_ATTEMPTS:
             execution_time = time.time() - start_time
             print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
@@ -81,7 +87,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
         search_term_instance.attempts += 1
         search_term_instance.save()
 
-        search_term = f"{program_name} site:{site} inurl:{inurl}"
+        search_term = f'"{program_name}" site:{site} inurl:{inurl}'
         google_response = fetch_google_search(search_term)
 
         if not google_response or isinstance(google_response, list) and google_response[0].get("error"):
@@ -107,7 +113,8 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
 
     execution_time = time.time() - start_time
     print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
-    return JsonResponse({'error': f"Empty response from SpaceSerp for {program_name}"}, status=status.HTTP_200_OK)
+    return JsonResponse({'error': f"Empty response from SpaceSerp for {program_name} for all sites"},
+                        status=status.HTTP_200_OK)
 
 
 class IconViewSet(viewsets.ModelViewSet):
