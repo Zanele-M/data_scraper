@@ -25,7 +25,7 @@ from rest_framework import status
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename=config('log_path'), encoding='utf-8', level=logging.WARNING)
 
-MAX_ATTEMPTS = 10
+#MAX_ATTEMPTS = 10
 
 
 def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) -> HttpResponse | Response:
@@ -60,9 +60,9 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
     """
     start_time = time.time()
     sites = [
-        {'site': 'softonic.com', 'inurl':'', 'url_pattern': ''},
-        # {'site': 'computerbase.de', 'inurl': 'downloads', 'url_pattern': 'https://www.computerbase.de/downloads/*'},
-        # {'site': 'uptodown.com', 'inurl': 'windows', 'url_pattern': 'https://.*\\.uptodown\\.com/windows'},
+        {'site': 'computerbase.de', 'inurl': 'downloads', 'url_pattern': 'https://www.computerbase.de/downloads/*'},
+        {'site': 'uptodown.com', 'inurl': 'windows', 'url_pattern': 'https://.*\\.uptodown\\.com/windows'},
+        {'site': 'softonic.com', 'inurl': '', 'url_pattern': ''}
     ]
 
     program_instance, _ = Program.objects.get_or_create(program_name=program_name, program_id=program_id)
@@ -78,15 +78,18 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
             term = f'"{program_name}" site:{site} inurl:{inurl}'
 
         search_term_instance, _ = SearchTerm.objects.get_or_create(term=term)
-        if search_term_instance.attempts > MAX_ATTEMPTS:
-            execution_time = time.time() - start_time
-            print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
-            return JsonResponse({'error': f"Maximum number of google search attempts reached for {program_name}"},
-                                status=status.HTTP_200_OK)
+        # if search_term_instance.attempts > MAX_ATTEMPTS:
+        #     execution_time = time.time() - start_time
+        #     print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
+        #     return JsonResponse({'error': f"Maximum number of google search attempts reached for {program_name}"},
+        #                         status=status.HTTP_200_OK)
+
+        if search_term_instance.term == term:
+            logger.error(f"Already processed {term}")
+            continue
 
         search_term_instance.attempts += 1
         search_term_instance.save()
-
 
         search_term = term
         google_response = fetch_google_search(search_term)
@@ -213,7 +216,7 @@ class IconViewSet(viewsets.ModelViewSet):
             icon_url = icon_url.strip()
             api_key = api_key.strip()
 
-            #todo add hash
+            # todo add hash
 
             if api_key != config('API_KEY') or len(api_key) != 41:
                 return JsonResponse({"error": "Invalid API key."}, status=status.HTTP_401_UNAUTHORIZED)
