@@ -87,7 +87,8 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
         search_term_instance.attempts += 1
         search_term_instance.save()
 
-        search_term = f'"{program_name}" site:{site} inurl:{inurl}'
+
+        search_term = term
         google_response = fetch_google_search(search_term)
 
         if not google_response or isinstance(google_response, list) and google_response[0].get("error"):
