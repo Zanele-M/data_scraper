@@ -44,10 +44,10 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
     execution_time = time.time() - start_time
     print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
     if isinstance(meta_result, list) and meta_result and isinstance(meta_result[0], dict) and "error" in meta_result[0]:
-        return JsonResponse({'error': meta_result},
+        return JsonResponse({'error': meta_result[0].error},
                             status=status.HTTP_200_OK)
     elif isinstance(meta_result, list) and not meta_result:
-        return JsonResponse({'error': meta_result},
+        return JsonResponse({'error': meta_result[0].error},
                             status=status.HTTP_200_OK)
     else:
         image_url = meta_result[0] if isinstance(meta_result, list) else meta_result
