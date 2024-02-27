@@ -40,6 +40,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
     meta_search_criteria = {"name": "meta", "attrs": {"property": "og:image"}}
     meta_attribute = "content"
     meta_result = extract_html_element_attribute(url, meta_search_criteria, meta_attribute)
+    print("meta_result", meta_result)
     execution_time = time.time() - start_time
     print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
     if isinstance(meta_result, list) and meta_result and isinstance(meta_result[0], dict) and "error" in meta_result[0]:

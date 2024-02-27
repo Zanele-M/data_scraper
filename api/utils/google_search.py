@@ -42,15 +42,9 @@ def fetch_google_search(query: str, output_file: str = None) -> list[dict[str, A
     }
 
     client = HTTPClient(url, retry_count=3, backoff_factor=1.0)
-
-
     response = client.request("GET", params=params)
-
-    print("response", response)
-
     result = response.json()
 
-    print(f'result for {query}', result)
     if 'organic_results' in result and result['organic_results']:
         links = []
         for item in result['organic_results']:
