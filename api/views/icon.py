@@ -25,7 +25,8 @@ from rest_framework import status
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename=config('log_path'), encoding='utf-8', level=logging.WARNING)
 
-#MAX_ATTEMPTS = 10
+
+# MAX_ATTEMPTS = 10
 
 
 def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) -> HttpResponse | Response:
@@ -54,9 +55,15 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
         return process_icon_image(image_url)
 
 
+import time
+import re
+from django.http import JsonResponse
+from rest_framework import status, viewsets
+# Assume other necessary imports are included as well.
+
 def search_icon(program_name: str, program_id: str) -> HttpResponse:
     """
-    Perform a new search for the program and extract the required attribute.
+    Search for an icon by checking both quoted and unquoted program names for each site.
     """
     start_time = time.time()
     sites = [
@@ -68,25 +75,33 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
     program_instance, _ = Program.objects.get_or_create(program_name=program_name, program_id=program_id)
 
     for site_info in sites:
-        site = site_info.get('site')
-        inurl = site_info.get('inurl')
-        pattern = site_info.get('url_pattern')
+        found = False
 
-        if inurl == '':
-            term = f'"{program_name}" site:{site}'
-        else:
-            term = f'"{program_name}" site:{site} inurl:{inurl}'
+        site = site_info['site']
+        inurl = site_info['inurl']
+        pattern = site_info['url_pattern']
+        # Prepare both quoted and unquoted terms for this site.
+        unquoted_term = f"{program_name} site:{site}" + (f" inurl:{inurl}" if inurl else "")
+        quoted_term = f'"{program_name}" site:{site}' + (f" inurl:{inurl}" if inurl else "")
 
-        search_term_instance, _ = SearchTerm.objects.get_or_create(term=term)
-        # if search_term_instance.attempts > MAX_ATTEMPTS:
-        #     execution_time = time.time() - start_time
-        #     print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
-        #     return JsonResponse({'error': f"Maximum number of google search attempts reached for {program_name}"},
-        #                         status=status.HTTP_200_OK)
+        term = quoted_term
 
-        if not _ and search_term_instance.term == term:
-            logger.error(f"Already processed {term}")
+        # Check if either term exists.
+        if SearchTerm.objects.filter(term=unquoted_term).exists():
+            found = True
             continue
+
+        if SearchTerm.objects.filter(term=quoted_term).exists():
+            found = True
+            continue
+
+        if not found:
+            # If neither term was found for any site, proceed with the quoted term for the last checked site.
+            # Note: This assumes you need to perform the search when neither term exists for all sites.
+            # If you need to create a term per site when not found, move term creation inside the site loop.
+            term_to_use = quoted_term
+            search_term_instance, _ = SearchTerm.objects.get_or_create(term=term_to_use)
+
 
         search_term_instance.attempts += 1
         search_term_instance.save()
@@ -181,7 +196,7 @@ class IconViewSet(viewsets.ModelViewSet):
             queryset = self.queryset.filter(
                 program_id__program_id=program_id,
                 program_id__program_name=program_name.strip(),
-                last_updated__gte=one_month_ago
+                last_updated__gte=one_month_ago,
             ).first()
             if queryset and queryset.url:
                 search_term_instance = queryset.search_term
