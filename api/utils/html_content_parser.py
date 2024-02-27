@@ -36,12 +36,12 @@ def extract_html_element_attribute(url: str, search_criteria: dict, attribute: s
     elements = soup.find_all(**search_criteria) if search_criteria else []
 
     if not elements:
-        return [{"error": f"No matching elements found for the provided search criteria {search_criteria} with url {url}."}]
+        return [f"No matching elements found for the provided search criteria {search_criteria} with url {url}."]
 
     values = [element.get(attribute) for element in elements if element.has_attr(attribute)]
 
     if not values:
-        return [{"error": f"No elements found with the specified attribute '{attribute}'."}]
+        return [f"No elements found with the specified attribute '{attribute}'."]
 
     # Adjusted to ensure the return type is consistent
     return values if len(values) > 1 else values[0]
