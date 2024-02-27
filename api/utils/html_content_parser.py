@@ -30,13 +30,13 @@ def extract_html_element_attribute(url: str, search_criteria: dict, attribute: s
 
     response = client.request("GET")
     if isinstance(response, dict) and "error" in response:
-        return [{"error": f"Error fetching the page for url {url}:{response.status_code}."}]  # Adjusted error message for clarity
+        return [{"error": f"Error fetching the page for url {url}."}]  # Adjusted error message for clarity
 
     soup = BeautifulSoup(response.content, 'html.parser')
     elements = soup.find_all(**search_criteria) if search_criteria else []
 
     if not elements:
-        return [{"error": f"No matching elements found for the provided search criteria {search_criteria} with url {url}: {response.status_code}."}]
+        return [{"error": f"No matching elements found for the provided search criteria {search_criteria} with url {url}."}]
 
     values = [element.get(attribute) for element in elements if element.has_attr(attribute)]
 
