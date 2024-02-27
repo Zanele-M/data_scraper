@@ -1,10 +1,10 @@
-import time
 import logging
-import re
 import hashlib
-
-from django.http import HttpResponse, JsonResponse
-from rest_framework import viewsets
+import time
+import re
+from django.http import JsonResponse
+from rest_framework import status, viewsets
+from django.http import HttpResponse
 from rest_framework.response import Response
 from django.utils import timezone
 from datetime import timedelta
@@ -20,7 +20,6 @@ from api.utils.image_processor import process_icon_image
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from rest_framework.decorators import action
-from rest_framework import status
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename=config('log_path'), encoding='utf-8', level=logging.WARNING)
@@ -54,12 +53,6 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
         logger.info(image_url)
         return process_icon_image(image_url)
 
-
-import time
-import re
-from django.http import JsonResponse
-from rest_framework import status, viewsets
-# Assume other necessary imports are included as well.
 
 def search_icon(program_name: str, program_id: str) -> HttpResponse:
     """
@@ -96,15 +89,10 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
             continue
 
         if not found:
-            # If neither term was found for any site, proceed with the quoted term for the last checked site.
-            # Note: This assumes you need to perform the search when neither term exists for all sites.
-            # If you need to create a term per site when not found, move term creation inside the site loop.
             term_to_use = quoted_term
             search_term_instance, _ = SearchTerm.objects.get_or_create(term=term_to_use)
-
-
-        search_term_instance.attempts += 1
-        search_term_instance.save()
+            search_term_instance.attempts += 1
+            search_term_instance.save()
 
         search_term = term
         google_response = fetch_google_search(search_term)
