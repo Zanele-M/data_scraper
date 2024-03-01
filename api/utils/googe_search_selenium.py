@@ -61,4 +61,4 @@ def fetch_icons(query: str):
         else:
             return f"Image not found for {query}"
     else:
-        return f"No images found for {query}"
+        return f"No images found for {query} with page source {wd.page_source}"
