@@ -22,10 +22,11 @@ def fetch_icons(query: str):
         wd.get(search_url)
         print(counter)
 
-        accept_cookies = wd.find_element(
-            By.XPATH,"/html/body/c-wiz/div/div/div/div[2]/div[1]/div[3]/div[1]/div[1]/form[2]/div/div/button")
-        if accept_cookies:
-            accept_cookies.click()
+        if "Before you continue to Google" in wd.page_source:
+            accept_cookies = wd.find_element(
+                By.XPATH, "")
+            if accept_cookies:
+                accept_cookies.click()
 
         if "Make sure all words are spelled correctly" in wd.page_source:
             return f"No image found for {query}"
