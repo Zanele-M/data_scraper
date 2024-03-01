@@ -9,3 +9,4 @@ mysqlclient==2.2.4
 gunicorn==20.1.0
 Pillow==10.2.0
 rembg
+selenium==4.18.1

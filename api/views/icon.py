@@ -14,9 +14,10 @@ from api.models.program import Program
 from api.models.search_results import SearchResults
 from api.models.search_term import SearchTerm
 from api.serializer.search_result import SearchResultsSerializer
+from api.utils.googe_search_selenium import fetch_icons
 from api.utils.google_search import fetch_google_search
 from api.utils.html_content_parser import extract_html_element_attribute
-from api.utils.image_processor import process_icon_image
+from api.utils.image_processor import process_icon_image, process_icon_base64
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from rest_framework.decorators import action
@@ -119,10 +120,15 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
             else:
                 logger.error(f"Url {item['link']} does not match the pattern {pattern}")
 
+    icon = fetch_icons(program_name+" icon")
     execution_time = time.time() - start_time
     print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
-    return JsonResponse({'error': f"Empty response from SpaceSerp for {program_name} for all sites"},
-                        status=status.HTTP_200_OK)
+    if isinstance(icon, str) and icon.startswith('http'):
+        return process_icon_image(icon)
+    elif isinstance(icon, str) and 'base64' in icon:
+        return process_icon_base64(icon, program_name)
+    else:
+        return JsonResponse({'error': icon}, status=status.HTTP_200_OK)
 
 
 class IconViewSet(viewsets.ModelViewSet):

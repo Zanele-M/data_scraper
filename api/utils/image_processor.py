@@ -1,7 +1,9 @@
 import logging
 import base64
 import tempfile
+from io import BytesIO
 
+from rembg import remove
 from rest_framework import status
 
 from api.utils.html_content_parser import download_image
@@ -9,6 +11,7 @@ from PIL import Image
 from decouple import config
 from django.http import JsonResponse
 from api.utils.rembg import rembg
+import re
 
 # Configure logging
 logging.basicConfig(filename=config('log_path'), encoding='utf-8', level=logging.WARNING)
@@ -66,4 +69,39 @@ def process_icon_image(image_url, rm_bg=True):
         logging.exception(f"Error processing image from {image_url}: {e}")
         return JsonResponse(
             {'error': f'An error occurred while processing the icon for {image_url}.'},
-                status=status.HTTP_200_OK)
+            status=status.HTTP_200_OK)
+
+
+def process_icon_base64(base64_icon, program_name, rm_bg=True):
+    try:
+        base64_str = re.search(r'base64,(.*)', base64_icon).group(1)
+        im = Image.open(BytesIO(base64.b64decode(base64_str)))
+        img_format = im.format
+
+        if img_format not in ["PNG", "GIF", "JPG", "JPEG", "WEBP"]:
+            return {'error': f"The file format '{img_format}' is not supported for {program_name}."}
+
+        if hasattr(im, 'info') and 'transparency' in im.info:
+            image_data_uri = f'data:image/{img_format};base64,{base64_str}'
+            return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
+        else:
+            if not im.mode == "RGBA":
+                im = im.convert('RGBA')
+
+                pixels = im.getpixel((1, 1))
+                print(pixels)
+
+                if pixels[0] >= 237 and pixels[1] >= 237 and pixels[2] >= 237 and rm_bg:
+                    rm_img = remove(base64.b64decode(base64_str))
+                    base64_encoded_data = base64.b64encode(rm_img)
+                    base64_string = base64_encoded_data.decode('utf-8')
+                    image_data_uri = f'data:image/{img_format};base64,{base64_string}'
+                    return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
+                else:
+                    image_data_uri = f'data:image/{img_format};base64,{base64_str}'
+                    return JsonResponse({'image_data': image_data_uri}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        JsonResponse(
+            {'error': f'An error occurred while processing the icon for {program_name}.'},
+            status=status.HTTP_200_OK)
