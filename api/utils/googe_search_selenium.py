@@ -34,6 +34,8 @@ def fetch_icons(query: str):
         with open(filename, "w", encoding="utf-8") as file:
             file.write(page_source)
 
+        print(f"Page source has been written to {filename}")
+
         try:
             thumbnail_results = wd.find_elements(By.XPATH, DIV_IMG_SPAN)
             counter = counter + 1
@@ -58,3 +60,5 @@ def fetch_icons(query: str):
             return image_result
         else:
             return f"Image not found for {query}"
+    else:
+        return f"No images found for {query}"
