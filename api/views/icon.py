@@ -33,7 +33,6 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
     """
     Extract the required meta attribute from the URL and respond with the image.
     """
-    start_time = time.time()
     # Update attempt count for the search term
     search_term_instance.attempts += 1
     search_term_instance.save()
@@ -42,14 +41,14 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
     meta_attribute = "content"
     meta_result = extract_html_element_attribute(url, meta_search_criteria, meta_attribute)
     print("meta_result", meta_result)
-    execution_time = time.time() - start_time
-    print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
     if isinstance(meta_result, list) and meta_result and isinstance(meta_result[0], dict) and "error" in meta_result[0]:
-        return JsonResponse({'error': meta_result[0]},
-                            status=status.HTTP_200_OK)
-    elif isinstance(meta_result, list) and not meta_result:
-        return JsonResponse({'error': meta_result[0]},
-                            status=status.HTTP_200_OK)
+        icon = fetch_icons(program_name + " icon")
+        if isinstance(icon, str) and icon.startswith('http'):
+            return process_icon_image(icon)
+        elif isinstance(icon, str) and 'base64' in icon:
+            return process_icon_base64(icon, program_name)
+        else:
+            return JsonResponse({'error': icon}, status=status.HTTP_200_OK)
     else:
         image_url = meta_result[0] if isinstance(meta_result, list) else meta_result
         logger.info(image_url)
