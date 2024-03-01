@@ -24,7 +24,7 @@ def fetch_icons(query: str):
 
         if "Before you continue to Google" in wd.page_source:
             accept_cookies = wd.find_element(
-                By.XPATH, "")
+                By.XPATH, "/html/body/c-wiz/div/div/div/div[2]/div[1]/div[3]/div[1]/div[1]/form[2]/div/div/button")
             if accept_cookies:
                 accept_cookies.click()
 
