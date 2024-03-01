@@ -31,17 +31,6 @@ def fetch_icons(query: str):
         if "Make sure all words are spelled correctly" in wd.page_source:
             return f"No image found for {query}"
 
-        page_source = wd.page_source
-
-        # Define the filename for your HTML file
-        filename = "page_source.html"
-
-        # Write the page source to the file
-        with open(filename, "w", encoding="utf-8") as file:
-            file.write(page_source)
-
-        print(f"Page source has been written to {filename}")
-
         try:
             thumbnail_results = wd.find_elements(By.XPATH, DIV_IMG_SPAN)
             counter = counter + 1
