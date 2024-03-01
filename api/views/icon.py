@@ -59,7 +59,6 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
     """
     Search for an icon by checking both quoted and unquoted program names for each site.
     """
-    start_time = time.time()
     sites = [
         {'site': 'computerbase.de', 'inurl': 'downloads', 'url_pattern': 'https://www.computerbase.de/downloads/*'},
         {'site': 'uptodown.com', 'inurl': 'windows', 'url_pattern': 'https://.*\\.uptodown\\.com/windows'},
@@ -120,8 +119,6 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
                 logger.error(f"Url {item['link']} does not match the pattern {pattern}")
 
     icon = fetch_icons(program_name+" icon")
-    execution_time = time.time() - start_time
-    print(f"Extract icon execution time for {program_name}: {execution_time} seconds.")
     if isinstance(icon, str) and icon.startswith('http'):
         return process_icon_image(icon)
     elif isinstance(icon, str) and 'base64' in icon:
