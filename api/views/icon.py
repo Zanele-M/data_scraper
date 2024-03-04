@@ -120,7 +120,7 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
             if not SearchResults.objects.filter(search_term=search_term_instance, program_id=program_instance,
                                                 url=item['link']).exists():
                 if re.match(pattern, item['link']):
-                    print(f"this is the item link item['link'] for {program_name}")
+                    print(f"this is the item link {item['link']} for {program_name}")
                     SearchResults.objects.create(
                         search_term=search_term_instance,
                         program_id=program_instance,
