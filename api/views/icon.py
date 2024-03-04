@@ -25,8 +25,28 @@ from rest_framework.decorators import action
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename=config('log_path'), encoding='utf-8', level=logging.WARNING)
 
-
 # MAX_ATTEMPTS = 10
+from django.http import JsonResponse
+from rest_framework import status
+
+
+def handle_base64icon_processing(program_name):
+    """
+    Fetches and processes the icon for the given program.
+
+    Args:
+    program_name (str): The name of the program to fetch and process the icon for.
+
+    Returns:
+    JsonResponse: The response containing the processed icon or an error message.
+    """
+    icon = fetch_icons(program_name + " icon")
+    if isinstance(icon, str) and icon.startswith('http'):
+        return process_icon_image(icon)
+    elif isinstance(icon, str) and 'base64' in icon:
+        return process_icon_base64(icon, program_name)
+    else:
+        return JsonResponse({'error': icon}, status=status.HTTP_200_OK)
 
 
 def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) -> HttpResponse | Response:
@@ -42,13 +62,7 @@ def extract_icon(url: str, search_term_instance: SearchTerm, program_name: str) 
     meta_result = extract_html_element_attribute(url, meta_search_criteria, meta_attribute)
     print("meta_result", meta_result)
     if isinstance(meta_result, list) and meta_result and isinstance(meta_result[0], dict) and "error" in meta_result[0]:
-        icon = fetch_icons(program_name + " icon")
-        if isinstance(icon, str) and icon.startswith('http'):
-            return process_icon_image(icon)
-        elif isinstance(icon, str) and 'base64' in icon:
-            return process_icon_base64(icon, program_name)
-        else:
-            return JsonResponse({'error': icon}, status=status.HTTP_200_OK)
+        return handle_base64icon_processing(program_name)
     else:
         image_url = meta_result[0] if isinstance(meta_result, list) else meta_result
         logger.info(image_url)
@@ -102,29 +116,28 @@ def search_icon(program_name: str, program_id: str) -> HttpResponse:
             continue
 
         for item in google_response:
-            if re.match(pattern, item['link']):
-                print("this is the item link", item['link'])
-                SearchResults.objects.create(
-                    search_term=search_term_instance,
-                    program_id=program_instance,
-                    position=item['position'],
-                    url=item['link']
-                )
-                extraction_response = extract_icon(item['link'], search_term_instance, program_name)
-                if extraction_response.status_code in [status.HTTP_200_OK]:
-                    return extraction_response  # Successfully found and extracted, or not found but processed
+            # Check if the URL already exists for the given search term and program
+            if not SearchResults.objects.filter(search_term=search_term_instance, program_id=program_instance,
+                                                url=item['link']).exists():
+                if re.match(pattern, item['link']):
+                    print(f"this is the item link item['link'] for {program_name}")
+                    SearchResults.objects.create(
+                        search_term=search_term_instance,
+                        program_id=program_instance,
+                        position=item['position'],
+                        url=item['link']
+                    )
+                    extraction_response = extract_icon(item['link'], search_term_instance, program_name)
+                    if extraction_response.status_code in [status.HTTP_200_OK]:
+                        return extraction_response  # Successfully found and extracted, or not found but processed
+                    else:
+                        logger.error("Error during extraction, attempting next site if available.")
                 else:
-                    logger.error("Error during extraction, attempting next site if available.")
+                    logger.error(f"Url {item['link']} does not match the pattern {pattern}")
             else:
-                logger.error(f"Url {item['link']} does not match the pattern {pattern}")
+                return handle_base64icon_processing(program_name)
 
-    icon = fetch_icons(program_name+" icon")
-    if isinstance(icon, str) and icon.startswith('http'):
-        return process_icon_image(icon)
-    elif isinstance(icon, str) and 'base64' in icon:
-        return process_icon_base64(icon, program_name)
-    else:
-        return JsonResponse({'error': icon}, status=status.HTTP_200_OK)
+    return handle_base64icon_processing(program_name)
 
 
 class IconViewSet(viewsets.ModelViewSet):
